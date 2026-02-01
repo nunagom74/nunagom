@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed password
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id           String         @id @default(uuid())
+  title        String
+  slug         String         @unique
+  price        Int
+  description  String
+  images       String[]       // URLs
+  colors       String[]       // e.g. ["Brown", "White"]
+  sizes        String[]       // e.g. ["Small", "Medium", "Large"]
+  madeToOrder  Boolean        @default(false)
+  leadTimeDays Int?           // For made-to-order
+  stock        Int?           // For ready-made
+  shippingFee  Int            @default(3000)
+  tags         String[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  orderItems   OrderItem[]
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  customerName    String
+  customerEmail   String?
+  customerPhone   String
+  address         String
+  detailAddress   String?
+  message         String?
+  status          OrderStatus @default(PENDING)
+  totalAmount     Int
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Int     // Price at time of order
+  options   Json?   // Selected options { "color": "Brown", "size": "Small" }
+}
+
+model Inquiry {
+  id        String   @id @default(uuid())
+  name      String
+  contact   String   // Email or Phone
+  content   String
+  isReplied Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,166 @@
+'use client'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
+import { createProduct, updateProduct } from '@/app/actions/product'
+import { useState } from 'react'
+
+interface ProductFormProps {
+    product?: {
+        id: string
+        title: string
+        slug: string
+        price: number
+        description: string
+        images: string[]
+        madeToOrder: boolean
+        stock: number | null
+        leadTimeDays: number | null
+    }
+}
+
+export function ProductForm({ product }: ProductFormProps) {
+    const isEdit = !!product
+    const action = isEdit ? updateProduct.bind(null, product.id) : createProduct
+
+    const [uploading, setUploading] = useState(false)
+    const [images, setImages] = useState<string[]>(product?.images || [])
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploading(true)
+        const formData = new FormData()
+        formData.append('file', file)
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            const data = await res.json()
+            if (data.success) {
+                setImages(prev => [...prev, data.url])
+            }
+        } catch (err) {
+            console.error('Upload failed', err)
+        } finally {
+            setUploading(false)
+            // Reset input
+            e.target.value = ''
+        }
+    }
+
+    const handleRemoveImage = (url: string) => {
+        setImages(prev => prev.filter(i => i !== url))
+    }
+
+    return (
+        <div className="space-y-6 max-w-2xl mx-auto">
+            <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" asChild>
+                    <Link href="/admin/products">
+                        <ChevronLeft className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <h1 className="text-3xl font-bold tracking-tight">{isEdit ? 'Edit Product' : 'Add Product'}</h1>
+            </div>
+
+            <Card>
+                <CardContent className="pt-6">
+                    <form action={action} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="title">Product Title</Label>
+                            <Input id="title" name="title" required defaultValue={product?.title} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="slug">Slug (URL)</Label>
+                                <Input id="slug" name="slug" required defaultValue={product?.slug} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="price">Price (KRW)</Label>
+                                <Input id="price" name="price" type="number" required defaultValue={product?.price} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea id="description" name="description" required rows={5} defaultValue={product?.description} />
+                        </div>
+
+                        <div className="space-y-4">
+                            <Label>Images</Label>
+
+                            {/* Existing Images */}
+                            {images.length > 0 && (
+                                <div className="flex gap-4 mb-4 flex-wrap">
+                                    {images.map((img, idx) => (
+                                        <div key={idx} className="relative w-20 h-20 border rounded overflow-hidden group">
+                                            <img src={img} alt="Product" className="object-cover w-full h-full" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage(img)}
+                                                className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Upload Input */}
+                            <div className="flex items-center gap-4">
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    disabled={uploading}
+                                    className="max-w-xs"
+                                />
+                                {uploading && <span className="text-sm text-muted-foreground">Uploading...</span>}
+                            </div>
+
+                            {/* Hidden Input for Server Action */}
+                            <input type="hidden" name="images" value={images.join(',')} />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="madeToOrder"
+                                name="madeToOrder"
+                                className="h-4 w-4 rounded border-gray-300"
+                                defaultChecked={product?.madeToOrder}
+                            />
+                            <Label htmlFor="madeToOrder">Made to Order?</Label>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="stock">Stock</Label>
+                                <Input id="stock" name="stock" type="number" defaultValue={product?.stock || ''} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="leadTimeDays">Lead Time (Days)</Label>
+                                <Input id="leadTimeDays" name="leadTimeDays" type="number" defaultValue={product?.leadTimeDays || 7} />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-4">
+                            <Button type="submit">{isEdit ? 'Update Product' : 'Create Product'}</Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
