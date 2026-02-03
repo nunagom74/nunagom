@@ -2,9 +2,10 @@ import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/rendere
 import { Order, OrderItem, Product } from '@prisma/client';
 
 // Register a font that supports Korean
+// Register a font that supports Korean
 Font.register({
-    family: 'Noto Sans KR',
-    src: 'https://fonts.gstatic.com/s/notosanskr/v13/PbykFmXiEBPT4ITbgNA5Cgm203Tq4JJW-2E91M3F8IO-1E4.ttf'
+    family: 'NanumGothic',
+    src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothic/NanumGothic-Regular.ttf'
 });
 
 const styles = StyleSheet.create({
@@ -12,7 +13,7 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         backgroundColor: '#FFFFFF',
         padding: 30,
-        fontFamily: 'Noto Sans KR'
+        fontFamily: 'NanumGothic'
     },
     header: {
         fontSize: 24,
