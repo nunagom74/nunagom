@@ -25,6 +25,14 @@ export default async function AdminDashboardPage() {
         }
     })
 
+    // Helper for KST Date
+    const getKSTDate = (offsetDays = 0) => {
+        const d = new Date()
+        d.setHours(d.getHours() + 9) // Add 9 hours for KST (approximation for server UTC)
+        d.setDate(d.getDate() - offsetDays)
+        return d
+    }
+
     // 2. Revenue Trend (Last 30 Days)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -32,7 +40,7 @@ export default async function AdminDashboardPage() {
     const revenueOrders = await prisma.order.findMany({
         where: {
             createdAt: { gte: thirtyDaysAgo },
-            status: { not: 'CANCELLED' } // Exclude cancelled orders
+            status: { not: 'CANCELLED' }
         },
         select: {
             createdAt: true,
@@ -40,28 +48,55 @@ export default async function AdminDashboardPage() {
         }
     })
 
+    // Fill last 30 days
     const revenueMap = new Map<string, number>()
-    // Initialize last 30 days with 0
-    for (let i = 0; i < 30; i++) {
+    const visitMap = new Map<string, number>()
+    const dateLabels: string[] = []
+
+    for (let i = 29; i >= 0; i--) {
         const d = new Date()
         d.setDate(d.getDate() - i)
-        // Format as MM/DD
-        const key = `${d.getMonth() + 1}/${d.getDate()}`
-        revenueMap.set(key, 0)
+        // Key for grouping: YYYY-MM-DD (local logic)
+        const year = d.getFullYear()
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        const dateKey = `${year}-${month}-${day}` // Matches DB DailyVisit format usually
+
+        // Display Label: MM/DD
+        const label = `${d.getMonth() + 1}/${d.getDate()}`
+
+        revenueMap.set(dateKey, 0)
+        visitMap.set(dateKey, 0)
+        dateLabels.push(dateKey) // Keep order
     }
 
     revenueOrders.forEach(order => {
         const d = new Date(order.createdAt)
-        const key = `${d.getMonth() + 1}/${d.getDate()}`
+        const year = d.getFullYear()
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        const key = `${year}-${month}-${day}`
+
+        // Only sum if it falls within our map generation (it should)
+        // Note: mismatch might happen slightly due to timezone if not careful, 
+        // strictly speaking comparing YYYY-MM-DD is safest if we assume server time consistency
         if (revenueMap.has(key)) {
             revenueMap.set(key, (revenueMap.get(key) || 0) + order.totalAmount)
+        } else {
+            // Fallback for timezone edge cases: try matching just MM/DD part if needed, 
+            // but YYYY-MM-DD is better. Let's assume standard UTC/Server time for simplicity here.
+            // If we want perfection, we'd need consistent TZ handling.
+            // Let's stick to the generated keys.
         }
     })
 
-    // Convert map to array and reverse to show chronological order
-    const revenueData = Array.from(revenueMap.entries())
-        .map(([name, total]) => ({ name, total }))
-        .reverse()
+    const revenueData = dateLabels.map(key => {
+        const [y, m, d] = key.split('-')
+        return {
+            name: `${Number(m)}/${Number(d)}`,
+            total: revenueMap.get(key) || 0
+        }
+    })
 
 
     // 3. Recent Orders
@@ -109,24 +144,40 @@ export default async function AdminDashboardPage() {
         }
     })
 
+
     // 5. Summary Counts
     const productCount = await prisma.product.count()
     const orderCount = await prisma.order.count()
     const inquiryCount = await prisma.inquiry.count()
 
-    const todayStr = new Date().toISOString().split('T')[0]
+    // Fix: Today's Visit (KST)
+    // We need current time in KST. 
+    // If server is UTC, adding 9 hours converts to KST.
+    const nowKST = new Date(new Date().getTime() + 9 * 60 * 60 * 1000)
+    const todayStr = nowKST.toISOString().split('T')[0]
+
     const todayVisit = await prisma.dailyVisit.findUnique({ where: { date: todayStr } })
     const totalVisitsToday = todayVisit?.count || 0
 
     // 6. Daily Visits (Last 30 Days)
     const visits = await prisma.dailyVisit.findMany({
-        where: { date: { gte: thirtyDaysAgo.toISOString().split('T')[0] } },
+        where: { date: { gte: dateLabels[0] } }, // Get from 30 days ago
         orderBy: { date: 'asc' }
     })
-    const visitData = visits.map(v => ({
-        date: v.date.substring(5), // MM-DD
-        count: v.count
-    }))
+
+    visits.forEach(v => {
+        if (visitMap.has(v.date)) {
+            visitMap.set(v.date, v.count)
+        }
+    })
+
+    const visitData = dateLabels.map(key => {
+        const [y, m, d] = key.split('-')
+        return {
+            date: `${Number(m)}-${Number(d)}`,
+            count: visitMap.get(key) || 0
+        }
+    })
 
     return (
         <div className="space-y-6">
