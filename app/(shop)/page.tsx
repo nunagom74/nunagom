@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/db'
+import { Product } from '@prisma/client'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { getDictionary } from '@/lib/i18n'
@@ -51,7 +52,7 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-          {products.map(product => (
+          {products.map((product: Product) => (
             <Link key={product.id} href={`/products/${product.slug}`} className="group">
               <Card className="border-none shadow-none bg-transparent">
                 <div className="aspect-square bg-muted rounded-xl overflow-hidden relative mb-4">
