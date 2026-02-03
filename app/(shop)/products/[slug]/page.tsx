@@ -10,9 +10,10 @@ import { ProductGallery } from '@/components/product-gallery'
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
+    const decodedSlug = decodeURIComponent(slug)
     const dict = await getDictionary()
     const product = await prisma.product.findUnique({
-        where: { slug }
+        where: { slug: decodedSlug }
     })
 
     if (!product) {
