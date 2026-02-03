@@ -3,6 +3,8 @@ import { ShoppingBag, Menu, Instagram } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getDictionary, getLocale } from '@/lib/i18n'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { CartSheet } from '@/components/cart/cart-sheet'
+import { CartIcon } from '@/components/cart/cart-icon'
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
     const dict = await getDictionary()
@@ -31,16 +33,10 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                                 <Instagram className="h-5 w-5" />
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" asChild>
-                            <Link href="/order">
-                                <ShoppingBag className="h-5 w-5" />
-                            </Link>
-                        </Button>
-                        <div className="md:hidden">
-                            <Button variant="ghost" size="icon">
-                                <Menu className="h-5 w-5" />
-                            </Button>
-                        </div>
+
+                        <CartIcon />
+
+
                     </div>
                 </div>
             </header>
@@ -48,6 +44,8 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
             <main className="flex-1">
                 {children}
             </main>
+
+            <CartSheet dict={dict} />
 
             <footer className="border-t bg-muted/50 py-8 text-center text-sm text-muted-foreground">
                 <div className="container mx-auto px-4">

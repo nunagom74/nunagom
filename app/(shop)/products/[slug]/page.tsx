@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from '@/components/ui/separator'
 import { getDictionary } from '@/lib/i18n'
 import { ProductGallery } from '@/components/product-gallery'
+import { AddToCartButton } from '@/components/cart/add-to-cart-button'
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
@@ -61,13 +62,27 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         {product.stock === 0 && !product.madeToOrder ? (
                             <Button size="lg" disabled className="w-full md:w-auto">{dict.product.sold_out}</Button>
                         ) : (
-                            <div className="flex gap-4">
-                                <Button size="lg" className="flex-1 rounded-full" asChild>
-                                    <Link href={`/order?productId=${product.id}`}>
-                                        {product.madeToOrder ? dict.product.request_order : dict.product.buy_now}
-                                    </Link>
-                                </Button>
-                                <Button size="lg" variant="outline" className="flex-1 rounded-full" asChild>
+                            <div className="flex gap-4 flex-col sm:flex-row">
+                                <div className="flex-1 flex gap-2">
+                                    <AddToCartButton
+                                        product={{
+                                            id: product.id,
+                                            title: product.title,
+                                            price: product.price,
+                                            images: product.images,
+                                            stock: product.stock,
+                                            madeToOrder: product.madeToOrder,
+                                            shippingFee: product.shippingFee
+                                        }}
+                                        label={dict.product.add_to_cart || "Add to Cart"}
+                                    />
+                                    <Button size="lg" className="flex-1 rounded-full" variant="secondary" asChild>
+                                        <Link href={`/order?productId=${product.id}`}>
+                                            {product.madeToOrder ? dict.product.request_order : dict.product.buy_now}
+                                        </Link>
+                                    </Button>
+                                </div>
+                                <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full" asChild>
                                     <Link href="/inquiry">{dict.product.ask_question}</Link>
                                 </Button>
                             </div>

@@ -27,6 +27,7 @@
     "shipping_fee": "Shipping",
     "buy_now": "Buy Now",
     "request_order": "Request Order",
+    "add_to_cart": "Add to Cart",
     "ask_question": "Ask Question",
     "care_instructions": "Care Instructions",
     "delivery": "Delivery",
@@ -52,7 +53,10 @@
     "message": "Message / Request",
     "payment_info": "Payment info will be sent to you after order confirmation.",
     "submit": "Place Order",
-    "submitting": "Placing Order..."
+    "submitting": "Placing Order...",
+    "subtotal": "Subtotal",
+    "shipping_fee": "Shipping Fee",
+    "total": "Total Amount"
   },
   "inquiry": {
     "title": "Contact Us",

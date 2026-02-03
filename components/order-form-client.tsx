@@ -7,6 +7,7 @@ import DaumPostcodeEmbed from 'react-daum-postcode'
 import { Search } from 'lucide-react'
 
 import { submitOrder } from '@/app/actions/order'
+import { useCart } from '@/lib/store/use-cart'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,11 +29,29 @@ function SubmitButton({ label, pendingLabel }: { label: string, pendingLabel: st
 export function OrderFormClient({ dict }: { dict: any }) {
     const searchParams = useSearchParams()
     const productId = searchParams.get('productId')
+    const { items: cartItems, clearCart } = useCart()
     const [state, action] = useFormState(submitOrder, undefined)
 
     const [address, setAddress] = useState('')
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
     const [phone, setPhone] = useState('')
+
+    // Determine Mode
+    const isDirectBuy = !!productId
+    // If not direct buy, use cart items. 
+    // If direct buy, we need to fetch product info? 
+    // Currently the form asks for quantity, implying product info is widely known or just ID is enough.
+    // Ideally for Direct Buy we show what we are buying.
+    // But keeping it simple for now as requested "maintain UI/UX".
+
+    // For Cart Mode, we need to pass items as JSON
+    const orderItemsJSON = isDirectBuy ? '' : JSON.stringify(cartItems.map(item => ({ id: item.id, quantity: item.quantity })))
+
+    // Calculate total for display (Cart Mode only)
+    const cartItemsTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+    // Shipping fee logic: Max of all items
+    const shippingFee = cartItems.reduce((acc, item) => Math.max(acc, item.shippingFee || 3000), 0)
+    const totalWithShipping = cartItemsTotal + shippingFee
 
     const handleComplete = (data: any) => {
         let fullAddress = data.address
@@ -69,14 +88,61 @@ export function OrderFormClient({ dict }: { dict: any }) {
         setPhone(formattedValue)
     }
 
+    if (!isDirectBuy && cartItems.length === 0) {
+        return (
+            <Card>
+                <CardContent className="py-12 flex flex-col items-center justify-center space-y-4">
+                    <p className="text-muted-foreground text-lg">장바구니가 비어있습니다.</p>
+                    <Button asChild>
+                        <a href="/products">쇼핑 계속하기</a>
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>{dict.order.shipping_contact}</CardTitle>
+                <CardTitle className="flex justify-between items-center">
+                    <span>{dict.order.shipping_contact}</span>
+                    {!isDirectBuy && <span className="text-lg text-primary">{totalWithShipping.toLocaleString()} {dict.product.price_unit}</span>}
+                </CardTitle>
             </CardHeader>
             <CardContent>
                 <form action={action} className="space-y-6">
-                    <input type="hidden" name="productId" value={productId || ''} />
+                    {/* Hidden Inputs determine mode */}
+                    {isDirectBuy ? (
+                        <input type="hidden" name="productId" value={productId} />
+                    ) : (
+                        <input type="hidden" name="items" value={orderItemsJSON} />
+                    )}
+
+                    {!isDirectBuy && (
+                        <div className="bg-muted/30 p-4 rounded-lg space-y-2 mb-4">
+                            <h3 className="font-semibold mb-2">주문 상품 ({cartItems.length})</h3>
+                            {cartItems.map(item => (
+                                <div key={item.id} className="flex justify-between text-sm">
+                                    <span>{item.title} x {item.quantity}</span>
+                                    <span>{(item.price * item.quantity).toLocaleString()} {dict.product.price_unit}</span>
+                                </div>
+                            ))}
+                            <div className="border-t pt-2 mt-2 space-y-1">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">{dict.order.subtotal || "Subtotal"}</span>
+                                    <span>{cartItemsTotal.toLocaleString()} {dict.product.price_unit}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">{dict.order.shipping_fee || "Shipping"}</span>
+                                    <span>{shippingFee.toLocaleString()} {dict.product.price_unit}</span>
+                                </div>
+                                <div className="flex justify-between font-bold text-lg pt-2 border-t mt-2">
+                                    <span>{dict.order.total || "Total"}</span>
+                                    <span>{totalWithShipping.toLocaleString()} {dict.product.price_unit}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <Label htmlFor="customerName">{dict.order.name}</Label>
@@ -131,10 +197,15 @@ export function OrderFormClient({ dict }: { dict: any }) {
                             </Dialog>
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="quantity">{dict.order.quantity}</Label>
-                        <Input id="quantity" name="quantity" type="number" min="1" defaultValue="1" required />
-                    </div>
+
+                    {/* Quantity input only for direct buy */}
+                    {isDirectBuy && (
+                        <div className="space-y-2">
+                            <Label htmlFor="quantity">{dict.order.quantity}</Label>
+                            <Input id="quantity" name="quantity" type="number" min="1" defaultValue="1" required />
+                        </div>
+                    )}
+
                     <div className="space-y-2">
                         <Label htmlFor="message">{dict.order.message}</Label>
                         <Textarea id="message" name="message" placeholder="" />
