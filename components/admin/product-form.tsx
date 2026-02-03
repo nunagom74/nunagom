@@ -112,7 +112,7 @@ export function ProductForm({ product, dict }: ProductFormProps) {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="slug">{dict.admin.product_form.slug}</Label>
                                 <Input
@@ -182,7 +182,7 @@ export function ProductForm({ product, dict }: ProductFormProps) {
                             <Label htmlFor="madeToOrder">{dict.admin.product_form.made_to_order}</Label>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="stock">{dict.admin.product_form.stock}</Label>
                                 <Input id="stock" name="stock" type="number" defaultValue={product?.stock || ''} />
