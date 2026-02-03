@@ -64,21 +64,4 @@ export async function submitOrder(prevState: any, formData: FormData) {
     redirect('/order/success')
 }
 
-// Inquiry Schema
-const InquirySchema = z.object({
-    name: z.string().min(1),
-    contact: z.string().min(1),
-    content: z.string().min(1),
-})
 
-export async function submitInquiry(prevState: any, formData: FormData) {
-    const result = InquirySchema.safeParse(Object.fromEntries(formData))
-
-    if (!result.success) return { error: "Invalid inputs" }
-
-    await prisma.inquiry.create({
-        data: result.data
-    })
-
-    redirect('/inquiry/success')
-}

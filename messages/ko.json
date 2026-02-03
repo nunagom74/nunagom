@@ -61,7 +61,8 @@
         "contact": "연락처 (이메일 또는 전화번호)",
         "message": "문의 내용",
         "submit": "문의 보내기",
-        "submitting": "전송 중..."
+        "submitting": "전송 중...",
+        "spam_warning": "스팸이나 부적절한 언어는 자동으로 차단됩니다."
     },
     "footer": {
         "copyright": "누나곰. 핸드메이드 니팅.",

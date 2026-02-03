@@ -61,7 +61,8 @@
     "contact": "Email or Phone",
     "message": "Message",
     "submit": "Send Inquiry",
-    "submitting": "Sending..."
+    "submitting": "Sending...",
+    "spam_warning": "Spam or abusive language will be automatically blocked."
   },
   "footer": {
     "copyright": "Nuna Gom. Handmade with Love.",
@@ -81,7 +82,7 @@
     "order_desc": "Thank you for your order. We will contact you shortly to confirm details and provide payment instructions.",
     "inquiry_title": "Message Sent!",
     "inquiry_desc": "We have received your inquiry and will get back to you as soon as possible.",
-    "back_home": "Back to Home"
+    "back_home": "Send Another Message"
   },
   "policy": {
     "privacy": {

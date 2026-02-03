@@ -16,8 +16,8 @@ import { TableCell, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { replyToInquiry } from '@/app/actions/inquiry'
-import { Loader2 } from 'lucide-react'
+import { replyToInquiry, deleteInquiry } from '@/app/actions/inquiry'
+import { Loader2, Trash2 } from 'lucide-react'
 
 export function InquiryRow({ inquiry, dict }: { inquiry: Inquiry, dict: any }) {
     const [isSaving, setIsSaving] = useState(false)
@@ -159,7 +159,26 @@ export function InquiryRow({ inquiry, dict }: { inquiry: Inquiry, dict: any }) {
                         </div>
                     </SheetContent>
                 </Sheet>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                    onClick={async () => {
+                        if (confirm(dict.admin.product_list.delete_confirm || "Are you sure you want to delete this inquiry?")) {
+                            const result = await deleteInquiry(inquiry.id)
+                            if (result.success) {
+                                // Router refresh is handled by revalidatePath in server action,
+                                // but we might need a manual refresh if it feels sluggish,
+                                // though usually revalidatePath is sufficient for server components.
+                            } else {
+                                alert(result.error)
+                            }
+                        }
+                    }}
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
             </TableCell>
-        </TableRow>
+        </TableRow >
     )
 }
