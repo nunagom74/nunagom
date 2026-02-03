@@ -118,6 +118,11 @@ export async function sendOrderEmail(
                 })
             } catch (pdfError) {
                 console.error("Failed to generate PDF:", pdfError)
+                // Return failure if invoice was requested but failed
+                return {
+                    success: false,
+                    error: `Failed to generate PDF Invoice: ${(pdfError as Error).message}`
+                }
             }
         }
 
@@ -129,6 +134,6 @@ export async function sendOrderEmail(
         })
     } catch (error) {
         console.error('Failed to send order email:', error)
-        return { success: false, error: 'Failed to send order email' }
+        return { success: false, error: `Failed to send order email: ${(error as Error).message}` }
     }
 }

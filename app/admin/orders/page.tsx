@@ -8,6 +8,7 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { OrderRow } from '@/components/admin/order-row'
+import { MobileOrderCard } from '@/components/admin/mobile-order-card'
 import { getDictionary } from '@/lib/i18n'
 
 import { SearchInput } from '@/components/admin/search-input'
@@ -45,7 +46,7 @@ export default async function OrdersPage({
                 <SearchInput placeholder={dict.admin.order_list.search_placeholder || "검색..."} />
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="hidden md:block rounded-md border bg-card">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -70,6 +71,17 @@ export default async function OrdersPage({
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            <div className="md:hidden space-y-4">
+                {orders.map((order: any) => (
+                    <MobileOrderCard key={order.id} order={order} dict={dict} />
+                ))}
+                {orders.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground bg-card rounded-lg border">
+                        {dict.admin.order_list.empty}
+                    </div>
+                )}
             </div>
         </div>
     )

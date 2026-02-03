@@ -7,6 +7,7 @@ import { z } from 'zod'
 // Order Schema
 const OrderSchema = z.object({
     customerName: z.string().min(1, "Name is required"),
+    customerEmail: z.string().email("Invalid email").optional().or(z.literal('')),
     customerPhone: z.string().min(1, "Phone is required"),
     address: z.string().min(1, "Address is required"),
     detailAddress: z.string().optional(),
@@ -19,10 +20,12 @@ export async function submitOrder(prevState: any, formData: FormData) {
     const result = OrderSchema.safeParse(Object.fromEntries(formData))
 
     if (!result.success) {
-        return { error: "Please check your inputs." }
+        // Return first error message
+        const firstError = result.error.issues[0]?.message || "Please check your inputs."
+        return { error: firstError }
     }
 
-    const { customerName, customerPhone, address, detailAddress, message, productId, quantity } = result.data
+    const { customerName, customerEmail, customerPhone, address, detailAddress, message, productId, quantity } = result.data
 
     const product = await prisma.product.findUnique({ where: { id: productId } })
     if (!product) return { error: "Product not found" }
@@ -33,6 +36,7 @@ export async function submitOrder(prevState: any, formData: FormData) {
         const order = await prisma.order.create({
             data: {
                 customerName,
+                customerEmail: customerEmail || null,
                 customerPhone,
                 address,
                 detailAddress,

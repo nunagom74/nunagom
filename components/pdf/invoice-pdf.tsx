@@ -70,53 +70,70 @@ type OrderWithItems = Order & {
     items: (OrderItem & { product: Product })[]
 }
 
-export const InvoicePDF = ({ order }: { order: OrderWithItems }) => (
-    <Document>
-        <Page size="A4" style={styles.page}>
-            <Text style={styles.header}>INVOICE</Text>
+export const InvoicePDF = ({ order }: { order: OrderWithItems }) => {
+    // Calculate totals
+    const subtotal = order.items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+    const shippingFee = order.totalAmount - subtotal
 
-            <View style={styles.section}>
-                <View style={styles.row}>
-                    <Text style={styles.label}>Order ID:</Text>
-                    <Text style={styles.value}>{order.id}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>Date:</Text>
-                    <Text style={styles.value}>{new Date(order.createdAt).toLocaleDateString()}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>Customer:</Text>
-                    <Text style={styles.value}>{order.customerName}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>Email:</Text>
-                    <Text style={styles.value}>{order.customerEmail || '-'}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>Phone:</Text>
-                    <Text style={styles.value}>{order.customerPhone}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>Address:</Text>
-                    <Text style={styles.value}>{order.address} {order.detailAddress}</Text>
-                </View>
-            </View>
+    return (
+        <Document>
+            <Page size="A4" style={styles.page}>
+                <Text style={styles.header}>거 래 명 세 서</Text>
 
-            <View style={styles.section}>
-                <View style={styles.tableHeader}>
-                    <Text style={styles.colName}>Item</Text>
-                    <Text style={styles.colQty}>Qty</Text>
-                    <Text style={styles.colPrice}>Price</Text>
-                </View>
-                {order.items.map((item, index) => (
-                    <View key={index} style={styles.tableRow}>
-                        <Text style={styles.colName}>{item.product.title}</Text>
-                        <Text style={styles.colQty}>{item.quantity}</Text>
-                        <Text style={styles.colPrice}>{item.price.toLocaleString()} KRW</Text>
+                <View style={styles.section}>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>주문번호:</Text>
+                        <Text style={styles.value}>{order.id}</Text>
                     </View>
-                ))}
-                <Text style={styles.total}>Total: {order.totalAmount.toLocaleString()} KRW</Text>
-            </View>
-        </Page>
-    </Document>
-);
+                    <View style={styles.row}>
+                        <Text style={styles.label}>일자:</Text>
+                        <Text style={styles.value}>{new Date(order.createdAt).toLocaleDateString()}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>주문자:</Text>
+                        <Text style={styles.value}>{order.customerName}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>이메일:</Text>
+                        <Text style={styles.value}>{order.customerEmail || '-'}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>연락처:</Text>
+                        <Text style={styles.value}>{order.customerPhone}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>주소:</Text>
+                        <Text style={styles.value}>{order.address} {order.detailAddress}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <View style={styles.tableHeader}>
+                        <Text style={styles.colName}>상품명</Text>
+                        <Text style={styles.colQty}>수량</Text>
+                        <Text style={styles.colPrice}>단가</Text>
+                    </View>
+                    {order.items.map((item, index) => (
+                        <View key={index} style={styles.tableRow}>
+                            <Text style={styles.colName}>{item.product.title}</Text>
+                            <Text style={styles.colQty}>{item.quantity}</Text>
+                            <Text style={styles.colPrice}>{item.price.toLocaleString()}원</Text>
+                        </View>
+                    ))}
+
+                    <View style={{ marginTop: 20 }}>
+                        <Text style={{ ...styles.total, fontSize: 10, fontWeight: 'normal' }}>
+                            주문금액: {subtotal.toLocaleString()}원
+                        </Text>
+                        <Text style={{ ...styles.total, fontSize: 10, fontWeight: 'normal', marginTop: 5 }}>
+                            배송비: {shippingFee.toLocaleString()}원
+                        </Text>
+                        <Text style={styles.total}>
+                            합계: {order.totalAmount.toLocaleString()}원
+                        </Text>
+                    </View>
+                </View>
+            </Page>
+        </Document>
+    );
+};

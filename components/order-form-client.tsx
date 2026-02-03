@@ -33,16 +33,16 @@ export function OrderFormClient({ dict }: { dict: any }) {
                         <Input id="customerName" name="customerName" required />
                     </div>
                     <div className="space-y-2">
+                        <Label htmlFor="customerEmail">Email (Optional)</Label>
+                        <Input id="customerEmail" name="customerEmail" type="email" placeholder="example@email.com" />
+                    </div>
+                    <div className="space-y-2">
                         <Label htmlFor="customerPhone">{dict.order.phone}</Label>
                         <Input id="customerPhone" name="customerPhone" required placeholder="010-0000-0000" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="address">{dict.order.address}</Label>
-                        <Input id="address" name="address" required />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="detailAddress">{dict.order.detail_address}</Label>
-                        <Input id="detailAddress" name="detailAddress" />
+                        <Textarea id="address" name="address" required placeholder={dict.order.address_placeholder || "주소를 입력해주세요"} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="quantity">{dict.order.quantity}</Label>

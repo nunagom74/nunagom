@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Order, OrderItem, Product, OrderStatus } from '@prisma/client'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import {
     Select,
     SelectContent,
@@ -10,7 +11,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { TableCell, TableRow } from '@/components/ui/table'
 import { updateOrderStatus } from '@/app/actions/order-admin'
 import { Loader2 } from 'lucide-react'
 import { OrderDetailSheet } from '@/components/admin/order-detail-sheet'
@@ -19,7 +19,7 @@ type OrderWithItems = Order & {
     items: (OrderItem & { product: Product })[]
 }
 
-export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) {
+export function MobileOrderCard({ order, dict }: { order: OrderWithItems, dict: any }) {
     const [isUpdating, setIsUpdating] = useState(false)
 
     const handleStatusChange = async (value: string) => {
@@ -29,16 +29,26 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
     }
 
     return (
-        <TableRow>
-            <TableCell className="font-mono text-xs hidden md:table-cell">{order.id.slice(0, 8)}...</TableCell>
-            <TableCell>
-                <div className="font-medium">{order.customerName}</div>
-                <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
-            </TableCell>
-            <TableCell>
+        <Card>
+            <CardHeader className="p-4 pb-2">
+                <div className="flex justify-between items-start text-xs text-muted-foreground">
+                    <span className="font-mono">{order.id.slice(0, 8)}...</span>
+                    <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                    <div className="font-bold text-lg">{order.customerName}</div>
+                    <div className="font-bold">
+                        {order.totalAmount.toLocaleString()} {dict.product.price_unit}
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="p-4 py-2">
+                <div className="text-sm text-muted-foreground mb-4">
+                    {order.customerPhone}
+                </div>
                 <div className="flex items-center gap-2">
                     <Select defaultValue={order.status} onValueChange={handleStatusChange} disabled={isUpdating}>
-                        <SelectTrigger className="w-[140px] h-8">
+                        <SelectTrigger className="w-full h-9">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -49,18 +59,16 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
                             <SelectItem value="CANCELLED">{dict.admin.order_list.status.cancelled}</SelectItem>
                         </SelectContent>
                     </Select>
-                    {isUpdating && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                    {isUpdating && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0" />}
                 </div>
-            </TableCell>
-            <TableCell>{order.totalAmount.toLocaleString()} {dict.product.price_unit}</TableCell>
-            <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
-                {new Date(order.createdAt).toLocaleDateString()}
-            </TableCell>
-            <TableCell>
+            </CardContent>
+            <CardFooter className="p-4 pt-2">
                 <OrderDetailSheet order={order} dict={dict}>
-                    <Button variant="outline" size="sm">{dict.admin.order_list.view}</Button>
+                    <Button variant="outline" className="w-full" size="sm">
+                        {dict.admin.order_list.view}
+                    </Button>
                 </OrderDetailSheet>
-            </TableCell>
-        </TableRow>
+            </CardFooter>
+        </Card>
     )
 }

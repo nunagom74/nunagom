@@ -41,9 +41,7 @@ export const metadata: Metadata = {
     images: ['/brand-image.jpg'],
   },
 }
-
 import { AnalyticsTracker } from "@/components/analytics-tracker";
-import { Analytics } from '@vercel/analytics/next';
 
 export default function RootLayout({
   children,
@@ -57,7 +55,6 @@ export default function RootLayout({
       >
         <AnalyticsTracker />
         {children}
-        <Analytics />
       </body>
     </html>
   );
