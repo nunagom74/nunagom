@@ -125,7 +125,7 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
 
     return (
         <TableRow>
-            <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}...</TableCell>
+            <TableCell className="font-mono text-xs hidden md:table-cell">{order.id.slice(0, 8)}...</TableCell>
             <TableCell>
                 <div className="font-medium">{order.customerName}</div>
                 <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
@@ -148,7 +148,7 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
                 </div>
             </TableCell>
             <TableCell>{order.totalAmount.toLocaleString()} {dict.product.price_unit}</TableCell>
-            <TableCell className="text-muted-foreground text-sm">
+            <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
                 {new Date(order.createdAt).toLocaleDateString()}
             </TableCell>
             <TableCell>
@@ -156,7 +156,7 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
                     <SheetTrigger asChild>
                         <Button variant="outline" size="sm">{dict.admin.order_list.view}</Button>
                     </SheetTrigger>
-                    <SheetContent className="overflow-y-auto">
+                    <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
                         <SheetHeader className="mb-6 px-6">
                             <SheetTitle>{dict.admin.order_list.details_title}</SheetTitle>
                             <SheetDescription>
@@ -165,7 +165,7 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
                             </SheetDescription>
                         </SheetHeader>
 
-                        <div className="px-6 flex gap-2 mb-4">
+                        <div className="px-6 flex flex-wrap gap-2 mb-4">
                             <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2">
                                 <Printer className="h-4 w-4" />
                                 {dict.admin.order_list.print}

@@ -40,7 +40,7 @@ export default async function OrdersPage({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">{dict.admin.order_list.title}</h1>
                 <SearchInput placeholder={dict.admin.order_list.search_placeholder || "검색..."} />
             </div>
@@ -49,11 +49,11 @@ export default async function OrdersPage({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{dict.admin.order_list.th_id}</TableHead>
+                            <TableHead className="hidden md:table-cell">{dict.admin.order_list.th_id}</TableHead>
                             <TableHead>{dict.admin.order_list.th_customer}</TableHead>
                             <TableHead>{dict.admin.order_list.th_status}</TableHead>
                             <TableHead>{dict.admin.order_list.th_total}</TableHead>
-                            <TableHead>{dict.admin.order_list.th_date}</TableHead>
+                            <TableHead className="hidden md:table-cell">{dict.admin.order_list.th_date}</TableHead>
                             <TableHead className="w-[100px]">{dict.admin.order_list.th_actions}</TableHead>
                         </TableRow>
                     </TableHeader>
