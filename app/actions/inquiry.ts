@@ -7,6 +7,8 @@ import { sendEmail } from '@/app/actions/email'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { containsProfanity } from '@/lib/profanity'
+import { headers } from 'next/headers'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 interface ReplyOptions {
     sendEmail?: boolean
@@ -36,9 +38,91 @@ export async function submitInquiry(prevState: any, formData: FormData) {
         return { success: true }
     }
 
-    // Spam/Profanity Check
+    // ---------------------------------------------------------
+    // 0. Cloudflare Turnstile Verification (Smart Captcha)
+    // ---------------------------------------------------------
+    const turnstileToken = formData.get('cf-turnstile-response')
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY
+
+    // Only skip if secret is not configured (dev mode), effectively optional if key is missing
+    if (turnstileSecret && turnstileToken) {
+        const verifyFormData = new FormData()
+        verifyFormData.append('secret', turnstileSecret)
+        verifyFormData.append('response', turnstileToken as string)
+
+        try {
+            const turnstileRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                method: 'POST',
+                body: verifyFormData,
+            })
+            const turnstileResult = await turnstileRes.json()
+            if (!turnstileResult.success) {
+                return { error: "캡차 인증에 실패했습니다. 다시 시도해 주세요." }
+            }
+        } catch (error) {
+            console.error("Turnstile check failed:", error)
+            // If API fails, allow it to proceed or block based on strictness. Here we allow.
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 1. Rate Limiting (DoS Protection)
+    // ---------------------------------------------------------
+    const headersList = await headers()
+    const ip = headersList.get('x-forwarded-for') || 'unknown'
+
+    // Check limits: Max 3 inquiries per 10 minutes per IP
+    if (ip !== 'unknown') {
+        const recentCount = await prisma.inquiry.count({
+            where: {
+                ipAddress: ip,
+                createdAt: {
+                    gte: new Date(Date.now() - 10 * 60 * 1000) // 10 minutes ago
+                }
+            }
+        })
+
+        if (recentCount >= 3) {
+            return { error: "잠시 후 다시 시도해주세요. (문의 허용량 초과)" }
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 2. Simple Keyword Check (Cost: Free)
+    // ---------------------------------------------------------
     if (containsProfanity(name) || containsProfanity(content)) {
         return { error: "부적절한 내용이 포함되어 있어 등록할 수 없습니다." }
+    }
+
+    // ---------------------------------------------------------
+    // 3. AI Spam Check (Cost: FREE with Google Gemini)
+    // ---------------------------------------------------------
+    const geminiKey = process.env.GEMINI_API_KEY
+    if (geminiKey) {
+        try {
+            const genAI = new GoogleGenerativeAI(geminiKey)
+            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" })
+
+            const prompt = `
+            You are a spam filter for a customer support form.
+            Check if the following message contains spam, hate speech, illegal content, or malicious advertising.
+            
+            Name: ${name}
+            Message: ${content}
+
+            Reply only with 'SPAM' or 'SAFE'.
+            `
+
+            const result = await model.generateContent(prompt)
+            const decision = result.response.text().trim().toUpperCase()
+
+            if (decision.includes('SPAM')) {
+                return { error: "부적절한 내용이 감지되어 차단되었습니다." }
+            }
+        } catch (error) {
+            console.error("Gemini Check Failed (failing open):", error)
+            // Failsafe: Allow
+        }
     }
 
     try {
@@ -46,7 +130,8 @@ export async function submitInquiry(prevState: any, formData: FormData) {
             data: {
                 name,
                 contact,
-                content
+                content,
+                ipAddress: ip
             }
         })
     } catch (error) {

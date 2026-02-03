@@ -82,6 +82,7 @@ model Inquiry {
   answer    String?  // Admin reply
   isReplied Boolean  @default(false)
   repliedAt DateTime?
+  ipAddress String?  // For Rate Limiting
   createdAt DateTime @default(now())
 }
 

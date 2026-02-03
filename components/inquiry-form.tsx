@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle2 } from 'lucide-react'
+import Turnstile from 'react-turnstile'
 
 function SubmitButton({ label, pendingLabel }: { label: string, pendingLabel: string }) {
     const { pending } = useFormStatus()
@@ -74,8 +75,20 @@ export function InquiryForm({ dict }: { dict: any }) {
                         <p className="text-red-500 text-sm text-center font-medium">{state.error}</p>
                     )}
 
-                    <div className="text-xs text-center text-red-400">
+                    <div className="text-xs text-center text-red-500">
                         * {dict.inquiry.spam_warning}
+                    </div>
+
+                    <div className="flex justify-center my-2">
+                        {/* Cloudflare Turnstile (Smart Captcha) */}
+                        <Turnstile
+                            sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                            onVerify={(token) => {
+                                const input = document.getElementById('cf-turnstile-response') as HTMLInputElement
+                                if (input) input.value = token
+                            }}
+                        />
+                        <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" />
                     </div>
 
                     <SubmitButton label={dict.inquiry.submit} pendingLabel={dict.inquiry.submitting} />
