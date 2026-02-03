@@ -32,6 +32,7 @@ model Product {
   madeToOrder  Boolean        @default(false)
   leadTimeDays Int?           // For made-to-order
   stock        Int?           // For ready-made
+  order        Int            @default(0) // For sorting
   shippingFee  Int            @default(3000)
   tags         String[]
   createdAt    DateTime       @default(now())

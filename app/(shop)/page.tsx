@@ -9,7 +9,10 @@ export default async function HomePage() {
   const dict = await getDictionary()
   const products = await prisma.product.findMany({
     take: 6,
-    orderBy: { createdAt: 'desc' }
+    orderBy: [
+      { order: 'asc' },
+      { createdAt: 'desc' }
+    ]
   })
 
   return (

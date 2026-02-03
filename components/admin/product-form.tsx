@@ -11,6 +11,26 @@ import { ChevronLeft } from 'lucide-react'
 import { createProduct, updateProduct } from '@/app/actions/product'
 import { useState } from 'react'
 
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { v4 as uuidv4 } from 'uuid';
+import { Download, X } from 'lucide-react';
+
 interface ProductFormProps {
     product?: {
         id: string
@@ -26,15 +46,106 @@ interface ProductFormProps {
     dict: any
 }
 
+interface ImageItem {
+    id: string;
+    url: string;
+}
+
+function SortableImage({
+    id,
+    url,
+    onRemove,
+    onDownload,
+    dict
+}: {
+    id: string
+    url: string
+    onRemove: (id: string) => void
+    onDownload: (url: string) => void
+    dict: any
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id: id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className="relative w-24 h-24 border rounded overflow-hidden group select-none touch-none bg-background"
+        >
+            <img src={url} alt="Product" className="object-cover w-full h-full pointer-events-none" />
+
+            {/* Overlay Actions */}
+            <div className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center justify-center gap-2">
+                <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onDownload(url)}
+                    className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors"
+                    title={dict.admin.product_form.download || "Download"}
+                >
+                    <Download className="w-4 h-4" />
+                </button>
+                <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onRemove(id)}
+                    className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors"
+                    title={dict.admin.product_form.remove}
+                >
+                    <X className="w-4 h-4" />
+                </button>
+            </div>
+        </div>
+    );
+}
+
 export function ProductForm({ product, dict }: ProductFormProps) {
     const isEdit = !!product
     const action = isEdit ? updateProduct.bind(null, product.id) : createProduct
 
     const [uploading, setUploading] = useState(false)
-    const [images, setImages] = useState<string[]>(product?.images || [])
+    // Initialize with unique IDs
+    const [images, setImages] = useState<ImageItem[]>(() =>
+        (product?.images || []).map(url => ({ id: uuidv4(), url }))
+    )
     const [title, setTitle] = useState(product?.title || '')
     const [slug, setSlug] = useState(product?.slug || '')
     const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(!!product?.slug)
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5, // Slightly reduced distance for easier drag
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDownloadImage = (url: string) => {
+        // Create a temporary link to download the image
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.download = url.split('/').pop() || 'image';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const slugify = (text: string) => {
         return text
@@ -66,11 +177,12 @@ export function ProductForm({ product, dict }: ProductFormProps) {
         setUploading(true)
 
         try {
-            const newBlob = await upload(file.name, file, {
+            const uniqueFilename = `${uuidv4()}-${file.name}`
+            const newBlob = await upload(uniqueFilename, file, {
                 access: 'public',
                 handleUploadUrl: '/api/upload',
             })
-            setImages(prev => [...prev, newBlob.url])
+            setImages(prev => [...prev, { id: uuidv4(), url: newBlob.url }])
         } catch (err) {
             console.error('Upload failed', err)
             alert('업로드 실패: ' + (err as Error).message)
@@ -81,9 +193,21 @@ export function ProductForm({ product, dict }: ProductFormProps) {
         }
     }
 
-    const handleRemoveImage = (url: string) => {
-        setImages(prev => prev.filter(i => i !== url))
+    const handleRemoveImage = (id: string) => {
+        setImages(prev => prev.filter(i => i.id !== id))
     }
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setImages((items) => {
+                const oldIndex = items.findIndex((item) => item.id === active.id);
+                const newIndex = items.findIndex((item) => item.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
 
     return (
         <div className="space-y-6 max-w-2xl mx-auto">
@@ -138,22 +262,29 @@ export function ProductForm({ product, dict }: ProductFormProps) {
                             <Label>{dict.admin.product_form.images}</Label>
 
                             {/* Existing Images */}
-                            {images.length > 0 && (
-                                <div className="flex gap-4 mb-4 flex-wrap">
-                                    {images.map((img, idx) => (
-                                        <div key={idx} className="relative w-20 h-20 border rounded overflow-hidden group">
-                                            <img src={img} alt="Product" className="object-cover w-full h-full" />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveImage(img)}
-                                                className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                {dict.admin.product_form.remove}
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <SortableContext
+                                    items={images.map(i => i.id)}
+                                    strategy={rectSortingStrategy}
+                                >
+                                    <div className="flex gap-4 mb-4 flex-wrap">
+                                        {images.map((item) => (
+                                            <SortableImage
+                                                key={item.id}
+                                                id={item.id}
+                                                url={item.url}
+                                                onRemove={handleRemoveImage}
+                                                onDownload={handleDownloadImage}
+                                                dict={dict}
+                                            />
+                                        ))}
+                                    </div>
+                                </SortableContext>
+                            </DndContext>
 
                             {/* Upload Input */}
                             <div className="flex items-center gap-4">
@@ -168,7 +299,7 @@ export function ProductForm({ product, dict }: ProductFormProps) {
                             </div>
 
                             {/* Hidden Input for Server Action */}
-                            <input type="hidden" name="images" value={images.join(',')} />
+                            <input type="hidden" name="images" value={images.map(i => i.url).join(',')} />
                         </div>
 
                         <div className="flex items-center gap-2">

@@ -91,3 +91,16 @@ export async function deleteProduct(id: string) {
     await prisma.product.delete({ where: { id } })
     revalidatePath('/admin/products')
 }
+
+export async function reorderProducts(items: { id: string; order: number }[]) {
+    await prisma.$transaction(
+        items.map((item) =>
+            prisma.product.update({
+                where: { id: item.id },
+                data: { order: item.order },
+            })
+        )
+    )
+    revalidatePath('/admin/products')
+    revalidatePath('/') // Also revalidate home/shop where products might be shown
+}
