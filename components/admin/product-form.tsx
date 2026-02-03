@@ -32,6 +32,32 @@ export function ProductForm({ product, dict }: ProductFormProps) {
 
     const [uploading, setUploading] = useState(false)
     const [images, setImages] = useState<string[]>(product?.images || [])
+    const [title, setTitle] = useState(product?.title || '')
+    const [slug, setSlug] = useState(product?.slug || '')
+    const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(!!product?.slug)
+
+    const slugify = (text: string) => {
+        return text
+            .toString()
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')           // Replace spaces with -
+            .replace(/[^a-z0-9\uAC00-\uD7A3\-]+/g, '') // Remove non-word chars (keep Korean)
+            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+    }
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newTitle = e.target.value
+        setTitle(newTitle)
+        if (!isSlugManuallyEdited) {
+            setSlug(slugify(newTitle))
+        }
+    }
+
+    const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSlug(e.target.value)
+        setIsSlugManuallyEdited(true)
+    }
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -77,13 +103,25 @@ export function ProductForm({ product, dict }: ProductFormProps) {
                     <form action={action} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="title">{dict.admin.product_form.title}</Label>
-                            <Input id="title" name="title" required defaultValue={product?.title} />
+                            <Input
+                                id="title"
+                                name="title"
+                                required
+                                value={title}
+                                onChange={handleTitleChange}
+                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="slug">{dict.admin.product_form.slug}</Label>
-                                <Input id="slug" name="slug" required defaultValue={product?.slug} />
+                                <Input
+                                    id="slug"
+                                    name="slug"
+                                    required
+                                    value={slug}
+                                    onChange={handleSlugChange}
+                                />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="price">{dict.admin.product_form.price}</Label>
