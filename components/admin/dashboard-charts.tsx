@@ -21,9 +21,9 @@ interface DashboardChartsProps {
 
 export function DashboardCharts({ revenueData, visitData, dict }: DashboardChartsProps) {
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            {/* Revenue Chart (Main - 4 cols) */}
-            <Card className="col-span-4">
+        <div className="grid gap-4 md:grid-cols-2">
+            {/* Revenue Chart (Main) */}
+            <Card>
                 <CardHeader>
                     <CardTitle>{dict.admin.dashboard_chart_revenue}</CardTitle>
                 </CardHeader>
@@ -55,8 +55,8 @@ export function DashboardCharts({ revenueData, visitData, dict }: DashboardChart
                 </CardContent>
             </Card>
 
-            {/* Visits Chart (Secondary - 3 cols) */}
-            <Card className="col-span-3">
+            {/* Visits Chart (Secondary) */}
+            <Card>
                 <CardHeader>
                     <CardTitle>{dict.admin.dashboard_chart_views}</CardTitle>
                 </CardHeader>
