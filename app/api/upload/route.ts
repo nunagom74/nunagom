@@ -1,36 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { v4 as uuidv4 } from 'uuid'
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
+import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 
-export async function POST(request: NextRequest) {
-    const data = await request.formData()
-    const file: File | null = data.get('file') as unknown as File
-
-    if (!file) {
-        return NextResponse.json({ success: false, message: 'No file uploaded' })
-    }
-
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    // Ensure public/uploads exists
-    const relativeUploadDir = `/uploads`
-    const uploadDir = join(process.cwd(), 'public', relativeUploadDir)
+export async function POST(request: Request): Promise<NextResponse> {
+    const body = (await request.json()) as HandleUploadBody
 
     try {
-        await mkdir(uploadDir, { recursive: true })
-    } catch (e) {
-        // ignore
+        const jsonResponse = await handleUpload({
+            body,
+            request,
+            onBeforeGenerateToken: async (pathname) => {
+                // Authenticate the user
+                const session = await getSession()
+                if (!session?.user) {
+                    throw new Error('Unauthorized')
+                }
+
+                return {
+                    allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+                    tokenPayload: JSON.stringify({
+                        // optional, sent to your server on upload completion
+                    }),
+                }
+            },
+            onUploadCompleted: async ({ blob, tokenPayload }) => {
+                // Get notified of client upload completion
+                console.log('blob uploaded', blob.url)
+            },
+        })
+
+        return NextResponse.json(jsonResponse)
+    } catch (error) {
+        return NextResponse.json(
+            { error: (error as Error).message },
+            { status: 400 },
+        )
     }
-
-    const uniqueSuffix = `${uuidv4()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
-    const filename = uniqueSuffix
-    const filepath = join(uploadDir, filename)
-
-    await writeFile(filepath, buffer)
-
-    const finalUrl = `${relativeUploadDir}/${filename}`
-
-    return NextResponse.json({ success: true, url: finalUrl })
 }

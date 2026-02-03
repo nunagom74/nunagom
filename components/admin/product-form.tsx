@@ -1,4 +1,5 @@
 'use client'
+import { upload } from '@vercel/blob/client'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,20 +38,16 @@ export function ProductForm({ product, dict }: ProductFormProps) {
         if (!file) return
 
         setUploading(true)
-        const formData = new FormData()
-        formData.append('file', file)
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
+            const newBlob = await upload(file.name, file, {
+                access: 'public',
+                handleUploadUrl: '/api/upload',
             })
-            const data = await res.json()
-            if (data.success) {
-                setImages(prev => [...prev, data.url])
-            }
+            setImages(prev => [...prev, newBlob.url])
         } catch (err) {
             console.error('Upload failed', err)
+            alert('업로드 실패: ' + (err as Error).message)
         } finally {
             setUploading(false)
             // Reset input
