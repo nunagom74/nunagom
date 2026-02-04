@@ -5,6 +5,7 @@ import { Resend } from 'resend'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { InvoicePDF } from '@/components/pdf/invoice-pdf'
 import React from 'react'
+import { optimizeOrderImages } from '@/lib/pdf-image-helper'
 
 import nodemailer from 'nodemailer'
 
@@ -119,8 +120,11 @@ export async function sendOrderEmail(
                 // Load Dictionary
                 const dict = await getDictionary(locale as any)
 
+                // Optimize images for PDF
+                const optimizedOrder = await optimizeOrderImages(order as any);
+
                 // Generate PDF Buffer
-                const pdfBuffer = await renderToBuffer(<InvoicePDF order={order} dict={dict} />)
+                const pdfBuffer = await renderToBuffer(<InvoicePDF order={optimizedOrder} dict={dict} />)
                 attachments.push({
                     filename: `Invoice-${order.id}.pdf`,
                     content: pdfBuffer

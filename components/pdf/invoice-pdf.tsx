@@ -168,6 +168,22 @@ export const InvoicePDF = ({ order, dict }: { order: OrderWithItems, dict: any }
     const date = new Date(order.createdAt);
     const dateStr = `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(date.getDate()).padStart(2, '0')}.`;
 
+    const getOptimizedImageUrl = (url: string) => {
+        if (!url) return '';
+        // If it's already an optimized URL or data URL, return as is
+        if (url.startsWith('data:') || url.includes('/_next/image')) return url;
+
+        // Construct absolute URL for the optimizer
+        // We need an absolute URL because this runs on the server side (Node.js)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+        // Use Next.js Image Optimization API
+        // w=128 (width), q=75 (quality)
+        // Append &.jpg to satisfy react-pdf extension check
+        return `${baseUrl}/_next/image?url=${encodeURIComponent(url)}&w=128&q=75&file.jpg`;
+    };
+
     return (
         <Document>
             <Page size="A4" style={styles.page}>
