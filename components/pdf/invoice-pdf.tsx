@@ -4,7 +4,10 @@ import { Order, OrderItem, Product } from '@prisma/client';
 // Register a font that supports Korean
 Font.register({
     family: 'NotoSansKR',
-    src: 'https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLQ.ttf'
+    fonts: [
+        { src: 'https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLQ.ttf', fontWeight: 400 },
+        { src: 'https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzg01eLQ.ttf', fontWeight: 700 }
+    ]
 });
 
 const styles = StyleSheet.create({
@@ -222,7 +225,7 @@ export const InvoicePDF = ({ order, dict }: { order: OrderWithItems, dict: any }
                 {order.message && (
                     <View style={{ marginBottom: 20, backgroundColor: '#F9F9F9', padding: 10, borderRadius: 4 }}>
                         <Text style={{ fontSize: 9, color: '#666', marginBottom: 4 }}>Message:</Text>
-                        <Text style={{ fontStyle: 'italic' }}>"{order.message}"</Text>
+                        <Text>"{order.message}"</Text>
                     </View>
                 )}
 
