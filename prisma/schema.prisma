@@ -49,6 +49,8 @@ model Order {
   detailAddress   String?
   message         String?
   status          OrderStatus @default(PENDING)
+  trackingNumber  String?
+  carrier         String?
   totalAmount     Int
   items           OrderItem[]
   createdAt       DateTime    @default(now())

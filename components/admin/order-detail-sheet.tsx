@@ -11,11 +11,162 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet'
-import { Printer } from 'lucide-react'
+import { Printer, Loader2, Save } from 'lucide-react'
 import { EmailDialog } from '@/components/admin/email-dialog'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { updateOrderStatus } from '@/app/actions/order-admin'
 
 type OrderWithItems = Order & {
     items: (OrderItem & { product: Product })[]
+    carrier?: string | null
+    trackingNumber?: string | null
+}
+
+const CARRIERS = [
+    { id: 'kr.epost', name: '우체국택배' },
+    { id: 'kr.cjlogistics', name: 'CJ대한통운' },
+    { id: 'kr.lotte', name: '롯데택배' },
+    { id: 'kr.hanjin', name: '한진택배' },
+    { id: 'kr.logen', name: '로젠택배' },
+]
+
+function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any }) {
+    const [status, setStatus] = useState<OrderStatus>(order.status)
+    const [carrier, setCarrier] = useState(order.carrier || '')
+    const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber || '')
+    const [isSaving, setIsSaving] = useState(false)
+
+    const handleSave = async () => {
+        setIsSaving(true)
+
+        let finalCarrier = carrier
+        if (carrier === 'DIRECT_INPUT') finalCarrier = ''
+
+        // If no carrier, don't save tracking number either? Or allow tracking number without carrier?
+        // Usually tracking number needs carrier. 
+        // If carrier is empty, let's just clear tracking info effectively. 
+        // Or if user just typed tracking number but no carrier, maybe they want to save it. 
+        // But user request was: "Empty carrier => No tracking info provided logic".
+
+        const trackingData = status === 'SHIPPED' ? {
+            carrier: finalCarrier || undefined, // undefined to avoid saving empty string if that matters, or just empty string
+            trackingNumber: (finalCarrier ? trackingNumber : undefined) // Only save tracking number if carrier exists? Or allow standalone?
+            // Safer: Save whatever inputs have.
+        } : undefined
+
+        // Refined logic:
+        // status SHIPPED. 
+        // carrier: finalCarrier (could be '', 'kr.epost', 'CustomName')
+        // trackingNumber: trackingNumber
+
+        const finalTrackingData = status === 'SHIPPED' ? {
+            carrier: finalCarrier || null,
+            trackingNumber: trackingNumber || null
+        } : undefined
+
+        try {
+            const result = await updateOrderStatus(order.id, status, trackingData)
+            if (result.success) {
+                alert('Status updated successfully')
+            } else {
+                alert('Failed to update: ' + result.error)
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Error updating status')
+        }
+        setIsSaving(false)
+    }
+
+    return (
+        <div className="bg-muted/50 p-4 rounded-lg">
+            <h3 className="font-medium mb-3 flex items-center gap-2">
+                {dict.admin.order_list.status_shipping_title || "Status & Shipping"}
+            </h3>
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 items-center">
+                    <Label className="text-muted-foreground">{dict.admin.order_list.th_status}</Label>
+                    <Select value={status} onValueChange={(v: OrderStatus) => setStatus(v)}>
+                        <SelectTrigger className="bg-background">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="PENDING">{dict.admin.order_list.status.pending}</SelectItem>
+                            <SelectItem value="CONFIRMED">{dict.admin.order_list.status.confirmed}</SelectItem>
+                            <SelectItem value="SHIPPED">{dict.admin.order_list.status.shipped}</SelectItem>
+                            <SelectItem value="DELIVERED">{dict.admin.order_list.status.delivered}</SelectItem>
+                            <SelectItem value="CANCELLED">{dict.admin.order_list.status.cancelled}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {status === 'SHIPPED' && (
+                    <>
+                        <div className="grid grid-cols-2 gap-4 items-center">
+                            <Label className="text-muted-foreground">{dict.admin.order_list.carrier_label || "Carrier"}</Label>
+                            <Select
+                                value={
+                                    carrier === '' ? '' :
+                                        CARRIERS.some(c => c.id === carrier) ? carrier :
+                                            'other'
+                                }
+                                onValueChange={(v) => {
+                                    if (v === 'other') setCarrier('DIRECT_INPUT')
+                                    else setCarrier(v)
+                                }}
+                            >
+                                <SelectTrigger className="bg-background">
+                                    <SelectValue placeholder={dict.admin.order_list.select_carrier || "Select Carrier"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {CARRIERS.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
+                                    <SelectItem value="other">{dict.admin.order_list.carrier_other || "Direct Input"}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {(!CARRIERS.some(c => c.id === carrier) && carrier !== '') && (
+                            <div className="grid grid-cols-2 gap-4 items-center">
+                                <Label></Label>
+                                <Input
+                                    className="bg-background"
+                                    placeholder={dict.admin.order_list.carrier_other_placeholder || "Enter Carrier Name"}
+                                    value={carrier === 'DIRECT_INPUT' ? '' : carrier}
+                                    onChange={e => setCarrier(e.target.value)}
+                                />
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4 items-center">
+                            <Label className="text-muted-foreground">{dict.admin.order_list.tracking_no_label || "Tracking No."}</Label>
+                            <Input
+                                className="bg-background"
+                                placeholder="1234567890"
+                                value={trackingNumber}
+                                onChange={e => setTrackingNumber(e.target.value)}
+                            />
+                        </div>
+                    </>
+                )}
+
+                <div className="flex justify-end pt-2">
+                    <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                        {dict.admin.order_list.save_status || "Save Status"}
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 interface OrderDetailSheetProps {
@@ -89,9 +240,14 @@ export function OrderDetailSheet({ order, dict, children }: OrderDetailSheetProp
                     customerName={order.customerName}
                     customerEmail={order.customerEmail || undefined}
                     dict={dict}
+                    carrier={order.carrier}
+                    trackingNumber={order.trackingNumber}
                 />
 
                 <div className="space-y-6 px-6 pb-6" ref={printableRef}>
+                    {/* Status Management Section */}
+                    <AdminStatusSection order={order} dict={dict} />
+
                     {/* Content for internal view */}
                     <div>
                         <h3 className="font-medium mb-2">{dict.admin.order_list.cust_info}</h3>

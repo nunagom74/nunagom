@@ -12,23 +12,30 @@ import { MobileOrderCard } from '@/components/admin/mobile-order-card'
 import { getDictionary } from '@/lib/i18n'
 
 import { SearchInput } from '@/components/admin/search-input'
+import { StatusFilter } from '@/components/admin/status-filter'
 
 export default async function OrdersPage({
     searchParams
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-    const { q } = await searchParams
+    const { q, status } = await searchParams
     const search = typeof q === 'string' ? q : undefined
+    const statusFilter = typeof status === 'string' ? status : undefined
 
     const dict = await getDictionary()
     const orders = await prisma.order.findMany({
-        where: search ? {
-            OR: [
-                { customerName: { contains: search, mode: 'insensitive' } },
-                { id: { contains: search, mode: 'insensitive' } },
+        where: {
+            AND: [
+                search ? {
+                    OR: [
+                        { customerName: { contains: search, mode: 'insensitive' } },
+                        { id: { contains: search, mode: 'insensitive' } },
+                    ]
+                } : {},
+                statusFilter ? { status: statusFilter as any } : {}
             ]
-        } : undefined,
+        },
         orderBy: { createdAt: 'desc' },
         include: {
             items: {
@@ -41,9 +48,14 @@ export default async function OrdersPage({
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold tracking-tight">{dict.admin.order_list.title}</h1>
-                <SearchInput placeholder={dict.admin.order_list.search_placeholder || "검색..."} />
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h1 className="text-3xl font-bold tracking-tight">{dict.admin.order_list.title}</h1>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                        <SearchInput placeholder={dict.admin.order_list.search_placeholder || "검색..."} />
+                    </div>
+                </div>
+                <StatusFilter dict={dict} />
             </div>
 
             <div className="hidden md:block rounded-md border bg-card">

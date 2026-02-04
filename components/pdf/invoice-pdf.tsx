@@ -210,6 +210,12 @@ export const InvoicePDF = ({ order, dict }: { order: OrderWithItems, dict: any }
                             <Text style={styles.label}>{dict?.admin?.order_list?.th_status || "Status"}</Text>
                             <Text style={styles.val}>{order.status}</Text>
                         </View>
+                        {(order.trackingNumber) && (
+                            <View style={styles.row}>
+                                <Text style={styles.label}>Shipping</Text>
+                                <Text style={styles.val}>{order.carrier?.replace('kr.', '')?.toUpperCase()} {order.trackingNumber}</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
 

@@ -27,9 +27,33 @@ interface EmailDialogProps {
     customerName: string
     customerEmail?: string
     dict: any
+    carrier?: string | null
+    trackingNumber?: string | null
 }
 
-const getTemplate = (status: OrderStatus, name: string, id: string) => {
+const getTrackingUrl = (carrier: string, number: string) => {
+    switch (carrier) {
+        case 'kr.epost': return `https://service.epost.go.kr/trace.RetrieveDomRgiTraceList.comm?sid1=${number}`
+        case 'kr.cjlogistics': return `https://www.cjlogistics.com/ko/tool/parcel/tracking?gnrTlNo=${number}`
+        case 'kr.lotte': return `https://www.lotteglogis.com/home/reservation/tracking/linkView?InvNo=${number}`
+        case 'kr.hanjin': return `https://www.hanjin.com/kor/CMS/DeliveryMgr/WaybillResult.do?mCode=MN038&wblNum=${number}`
+        case 'kr.logen': return `https://www.ilogen.com/web/personal/trace/${number}`
+        default: return ''
+    }
+}
+
+const getCarrierName = (carrier: string) => {
+    switch (carrier) {
+        case 'kr.epost': return '우체국택배'
+        case 'kr.cjlogistics': return 'CJ대한통운'
+        case 'kr.lotte': return '롯데택배'
+        case 'kr.hanjin': return '한진택배'
+        case 'kr.logen': return '로젠택배'
+        default: return carrier
+    }
+}
+
+const getTemplate = (status: OrderStatus, name: string, id: string, carrier?: string | null, trackingNumber?: string | null) => {
     const orderIdShort = id.slice(0, 8)
 
     switch (status) {
@@ -39,9 +63,20 @@ const getTemplate = (status: OrderStatus, name: string, id: string) => {
                 body: `안녕하세요 ${name}님,\n\n고객님의 주문 확인(및 입금 확인)이 완료되었습니다.\n\n곧 제작 또는 배송 준비가 시작될 예정입니다.\n\n감사합니다.\n누나곰 드림`
             }
         case 'SHIPPED':
+            let trackingInfo = ''
+            if (carrier && trackingNumber) {
+                const url = getTrackingUrl(carrier, trackingNumber)
+                const carrierName = getCarrierName(carrier)
+
+                trackingInfo = `\n\n[배송 정보]\n택배사: ${carrierName}\n송장번호: ${trackingNumber}`
+                if (url) {
+                    trackingInfo += `\n조회하기: ${url}`
+                }
+            }
+
             return {
                 subject: `[누나곰] 상품이 발송되었습니다! (주문번호: #${orderIdShort})`,
-                body: `안녕하세요 ${name}님,\n\n기다려주셔서 감사합니다. 주문하신 상품이 오늘 발송되었습니다.\n\n보통 1~3일(영업일 기준) 내에 수령하실 수 있습니다.\n\n감사합니다.\n누나곰 드림`
+                body: `안녕하세요 ${name}님,\n\n기다려주셔서 감사합니다. 주문하신 상품이 오늘 발송되었습니다.\n\n보통 1~3일(영업일 기준) 내에 수령하실 수 있습니다.${trackingInfo}\n\n감사합니다.\n누나곰 드림`
             }
         case 'DELIVERED':
             return {
@@ -69,7 +104,9 @@ export function EmailDialog({
     orderStatus,
     customerName,
     customerEmail,
-    dict
+    dict,
+    carrier,
+    trackingNumber
 }: EmailDialogProps) {
     const [subject, setSubject] = useState("")
     const [body, setBody] = useState("")
@@ -78,11 +115,11 @@ export function EmailDialog({
 
     useEffect(() => {
         if (open) {
-            const template = getTemplate(orderStatus, customerName, orderId)
+            const template = getTemplate(orderStatus, customerName, orderId, carrier, trackingNumber)
             setSubject(template.subject)
             setBody(template.body)
         }
-    }, [open, orderStatus, customerName, orderId])
+    }, [open, orderStatus, customerName, orderId, carrier, trackingNumber])
 
     const handleSend = () => {
         startTransition(async () => {

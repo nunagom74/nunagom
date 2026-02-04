@@ -3,16 +3,7 @@
 import { useState } from 'react'
 import { Order, OrderItem, Product, OrderStatus } from '@prisma/client'
 import { Button } from '@/components/ui/button'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import { TableCell, TableRow } from '@/components/ui/table'
-import { updateOrderStatus } from '@/app/actions/order-admin'
-import { Loader2 } from 'lucide-react'
 import { OrderDetailSheet } from '@/components/admin/order-detail-sheet'
 
 type OrderWithItems = Order & {
@@ -37,19 +28,15 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
             </TableCell>
             <TableCell>
                 <div className="flex items-center gap-2">
-                    <Select defaultValue={order.status} onValueChange={handleStatusChange} disabled={isUpdating}>
-                        <SelectTrigger className="w-[140px] h-8">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="PENDING">{dict.admin.order_list.status.pending}</SelectItem>
-                            <SelectItem value="CONFIRMED">{dict.admin.order_list.status.confirmed}</SelectItem>
-                            <SelectItem value="SHIPPED">{dict.admin.order_list.status.shipped}</SelectItem>
-                            <SelectItem value="DELIVERED">{dict.admin.order_list.status.delivered}</SelectItem>
-                            <SelectItem value="CANCELLED">{dict.admin.order_list.status.cancelled}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {isUpdating && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold
+                        ${order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                                order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
+                                    order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                        'bg-red-100 text-red-800'
+                        }`}>
+                        {dict.admin.order_list.status[order.status.toLowerCase()]}
+                    </span>
                 </div>
             </TableCell>
             <TableCell>{order.totalAmount.toLocaleString()} {dict.product.price_unit}</TableCell>
