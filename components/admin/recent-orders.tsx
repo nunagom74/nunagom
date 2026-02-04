@@ -10,6 +10,7 @@ interface RecentOrder {
     customerName: string
     customerEmail: string | null
     totalAmount: number
+    createdAt: Date
 }
 
 interface RecentOrdersProps {
@@ -36,8 +37,11 @@ export function RecentOrders({ orders, dict }: RecentOrdersProps) {
                                     {order.customerEmail || "No email"}
                                 </p>
                             </div>
-                            <div className="ml-auto font-medium">
-                                +{order.totalAmount.toLocaleString()} KRW
+                            <div className="ml-auto font-medium text-right">
+                                <div>+{order.totalAmount.toLocaleString()} {dict.product.price_unit}</div>
+                                <div className="text-xs text-muted-foreground font-normal">
+                                    {new Date(order.createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' })}
+                                </div>
                             </div>
                         </div>
                     ))}

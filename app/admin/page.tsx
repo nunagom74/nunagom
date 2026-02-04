@@ -108,7 +108,8 @@ export default async function AdminDashboardPage() {
             customerName: true,
             customerEmail: true,
             totalAmount: true,
-            status: true
+            status: true,
+            createdAt: true
         }
     })
 
@@ -181,8 +182,12 @@ export default async function AdminDashboardPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight">{dict.admin.dashboard}</h1>
-
+            <div className="flex items-center justify-between space-y-2">
+                <div className="flex items-baseline gap-2">
+                    <h2 className="text-3xl font-bold tracking-tight">{dict.admin.dashboard}</h2>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">(KST 기준)</span>
+                </div>
+            </div>
             {/* Row 1: Summary Cards */}
             <SummaryCards
                 summary={{

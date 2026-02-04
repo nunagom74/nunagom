@@ -13,8 +13,9 @@ export function MobileOrderCard({ order, dict }: { order: OrderWithItems, dict: 
         <Card>
             <CardHeader className="p-3 pb-1">
                 <div className="flex justify-between items-start text-xs text-muted-foreground">
-                    <span className="font-mono">{order.id.slice(0, 8)}...</span>
-                    <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                    <span className="text-xs text-muted-foreground">
+                        {new Date(order.createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                    </span>
                 </div>
                 <div className="flex justify-between items-center mt-1">
                     <div className="font-semibold">{order.customerName}</div>

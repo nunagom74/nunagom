@@ -92,10 +92,10 @@ function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any 
                 {dict.admin.order_list.status_shipping_title || "Status & Shipping"}
             </h3>
             <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 items-center">
+                <div className="grid grid-cols-[120px_1fr] gap-4 items-center">
                     <Label className="text-muted-foreground">{dict.admin.order_list.th_status}</Label>
                     <Select value={status} onValueChange={(v: OrderStatus) => setStatus(v)}>
-                        <SelectTrigger className="bg-background">
+                        <SelectTrigger className="bg-background w-full">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -110,7 +110,7 @@ function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any 
 
                 {status === 'SHIPPED' && (
                     <>
-                        <div className="grid grid-cols-2 gap-4 items-center">
+                        <div className="grid grid-cols-[120px_1fr] gap-4 items-center">
                             <Label className="text-muted-foreground">{dict.admin.order_list.carrier_label || "Carrier"}</Label>
                             <Select
                                 value={
@@ -123,7 +123,7 @@ function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any 
                                     else setCarrier(v)
                                 }}
                             >
-                                <SelectTrigger className="bg-background">
+                                <SelectTrigger className="bg-background w-full">
                                     <SelectValue placeholder={dict.admin.order_list.select_carrier || "Select Carrier"} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -135,7 +135,7 @@ function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any 
                             </Select>
                         </div>
                         {(!CARRIERS.some(c => c.id === carrier) && carrier !== '') && (
-                            <div className="grid grid-cols-2 gap-4 items-center">
+                            <div className="grid grid-cols-[120px_1fr] gap-4 items-center">
                                 <Label></Label>
                                 <Input
                                     className="bg-background"
@@ -146,7 +146,7 @@ function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any 
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4 items-center">
+                        <div className="grid grid-cols-[120px_1fr] gap-4 items-center">
                             <Label className="text-muted-foreground">{dict.admin.order_list.tracking_no_label || "Tracking No."}</Label>
                             <Input
                                 className="bg-background"
@@ -158,31 +158,28 @@ function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any 
                     </>
                 )}
 
-                <div className="flex justify-between pt-2">
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={async () => {
-                            if (confirm(dict.admin.order_list.confirm_delete || "Are you sure you want to delete this order? This cannot be undone.")) {
-                                const { deleteOrder } = await import('@/app/actions/order-admin');
-                                const result = await deleteOrder(order.id);
-                                if (result.success) {
-                                    alert(dict.admin.order_list.delete_success || "Order deleted");
-                                    // Close sheet? We can't easily close controlled sheet from here without prop. 
-                                    // But revalidatePath will refresh list. 
-                                    // ideally we should close the sheet.
-                                    // For now, let's reload or just let revalidate handle it (sheet might stay open with deleted data? or close if list updates).
-                                    // A full page reload is safest for now to clear state.
-                                    window.location.reload();
-                                } else {
-                                    alert(result.error);
+                <div className="flex justify-end pt-2 gap-2">
+                    {status === 'CANCELLED' && (
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={async () => {
+                                if (confirm(dict.admin.order_list.confirm_delete || "정말로 이 주문을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+                                    const { deleteOrder } = await import('@/app/actions/order-admin');
+                                    const result = await deleteOrder(order.id);
+                                    if (result.success) {
+                                        alert(dict.admin.order_list.delete_success || "주문이 삭제되었습니다.");
+                                        window.location.reload();
+                                    } else {
+                                        alert(result.error);
+                                    }
                                 }
-                            }
-                        }}
-                    >
-                        {dict.admin.order_list.delete_order || "Delete Order"}
-                    </Button>
+                            }}
+                        >
+                            {dict.admin.order_list.delete_order || "주문 삭제"}
+                        </Button>
+                    )}
 
                     <Button size="sm" onClick={handleSave} disabled={isSaving}>
                         {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}

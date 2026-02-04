@@ -50,7 +50,10 @@ export default async function OrdersPage({
         <div className="space-y-6">
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h1 className="text-3xl font-bold tracking-tight">{dict.admin.order_list.title}</h1>
+                    <div className="flex items-baseline gap-2">
+                        <h1 className="text-3xl font-bold tracking-tight">{dict.admin.order_list.title}</h1>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">(KST 기준)</span>
+                    </div>
                     <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                         <SearchInput placeholder={dict.admin.order_list.search_placeholder || "검색..."} />
                     </div>

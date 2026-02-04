@@ -28,15 +28,18 @@ export async function updateOrderStatus(
 
 export async function deleteOrder(orderId: string) {
     try {
-        // Delete items first? Prisma handles cascade delete if configured usually.
-        // But to be safe or if not configured:
-        // await prisma.orderItem.deleteMany({ where: { orderId } }) 
-        // Assuming database has CASCADE ON DELETE constraints or Prisma schema handles it.
-        // Let's try simple delete first.
+        await prisma.$transaction(async (tx) => {
+            // Delete all order items first to satisfy foreign key constraints
+            await tx.orderItem.deleteMany({
+                where: { orderId }
+            })
 
-        await prisma.order.delete({
-            where: { id: orderId }
+            // Then delete the order
+            await tx.order.delete({
+                where: { id: orderId }
+            })
         })
+
         revalidatePath('/admin/orders')
         return { success: true }
     } catch (error) {

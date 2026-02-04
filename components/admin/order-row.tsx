@@ -35,8 +35,8 @@ export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) 
                 </div>
             </TableCell>
             <TableCell>{order.totalAmount.toLocaleString()} {dict.product.price_unit}</TableCell>
-            <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
-                {new Date(order.createdAt).toLocaleDateString()}
+            <TableCell className="hidden md:table-cell">
+                {new Date(order.createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
             </TableCell>
             <TableCell>
                 <OrderDetailSheet order={order} dict={dict}>
