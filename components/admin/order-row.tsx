@@ -11,13 +11,8 @@ type OrderWithItems = Order & {
 }
 
 export function OrderRow({ order, dict }: { order: OrderWithItems, dict: any }) {
-    const [isUpdating, setIsUpdating] = useState(false)
-
-    const handleStatusChange = async (value: string) => {
-        setIsUpdating(true)
-        await updateOrderStatus(order.id, value as OrderStatus)
-        setIsUpdating(false)
-    }
+    // Status update logic removed to keep list view read-only.
+    // Edit status inside the details sheet.
 
     return (
         <TableRow>
