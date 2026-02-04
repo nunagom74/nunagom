@@ -158,7 +158,32 @@ function AdminStatusSection({ order, dict }: { order: OrderWithItems, dict: any 
                     </>
                 )}
 
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-between pt-2">
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                            if (confirm(dict.admin.order_list.confirm_delete || "Are you sure you want to delete this order? This cannot be undone.")) {
+                                const { deleteOrder } = await import('@/app/actions/order-admin');
+                                const result = await deleteOrder(order.id);
+                                if (result.success) {
+                                    alert(dict.admin.order_list.delete_success || "Order deleted");
+                                    // Close sheet? We can't easily close controlled sheet from here without prop. 
+                                    // But revalidatePath will refresh list. 
+                                    // ideally we should close the sheet.
+                                    // For now, let's reload or just let revalidate handle it (sheet might stay open with deleted data? or close if list updates).
+                                    // A full page reload is safest for now to clear state.
+                                    window.location.reload();
+                                } else {
+                                    alert(result.error);
+                                }
+                            }
+                        }}
+                    >
+                        {dict.admin.order_list.delete_order || "Delete Order"}
+                    </Button>
+
                     <Button size="sm" onClick={handleSave} disabled={isSaving}>
                         {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                         {dict.admin.order_list.save_status || "Save Status"}
