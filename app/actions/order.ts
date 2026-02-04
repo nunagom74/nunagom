@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import { sendOrderEmail } from './email'
 
 // Order Schema
 const OrderSchema = z.object({
@@ -94,6 +95,29 @@ export async function submitOrder(prevState: any, formData: FormData) {
                 }
             }
         })
+
+        // -- New: Auto-send Order Confirmation Email --
+        if (customerEmail) {
+            const orderIdShort = order.id.slice(0, 8).toUpperCase()
+            const subject = `[누나곰] 주문이 확인되었습니다 (주문번호: #${orderIdShort})`
+            const emailBody = `안녕하세요 ${customerName}님,\n\n누나곰을 찾아주셔서 감사합니다. 고객님의 주문이 성공적으로 접수되었습니다.\n\n첨부된 주문서를 확인해주시기 바라며, 배송이 시작되면 다시 안내해 드리겠습니다.\n\n감사합니다.\n누나곰 드림`
+
+            // Send email asynchronously (don't block the user too long, but await to ensure it's fired)
+            console.log(`Sending auto-confirmation email to ${customerEmail}...`)
+            const emailResult = await sendOrderEmail(
+                order.id,
+                subject,
+                emailBody,
+                true // Attach Invoice PDF
+            )
+
+            if (!emailResult.success) {
+                console.error("Failed to auto-send email:", emailResult.error)
+            } else {
+                console.log("Auto-confirmation email sent successfully.")
+            }
+        }
+        // ---------------------------------------------
 
         // Return success with clearCart flag if needed, or redirect
     } catch (err) {
