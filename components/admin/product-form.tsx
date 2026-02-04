@@ -323,7 +323,7 @@ export function ProductForm({ product, dict }: ProductFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="stock">{dict.admin.product_form.stock}</Label>
-                                <Input id="stock" name="stock" type="number" defaultValue={product?.stock || ''} />
+                                <Input id="stock" name="stock" type="number" defaultValue={product?.stock ?? ''} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="leadTimeDays">{dict.admin.product_form.lead_time}</Label>
