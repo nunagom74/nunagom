@@ -59,10 +59,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     <Separator className="mb-8" />
 
                     <div className="flex flex-col gap-4 mb-8">
-                        {product.stock === 0 && !product.madeToOrder ? (
-                            <Button size="lg" disabled className="w-full md:w-auto">{dict.product.sold_out}</Button>
-                        ) : (
-                            <div className="flex gap-4 flex-col sm:flex-row">
+                        <div className="flex gap-4 flex-col sm:flex-row">
+                            {product.stock === 0 && !product.madeToOrder ? (
+                                <Button size="lg" disabled className="flex-1 rounded-full">{dict.product.sold_out}</Button>
+                            ) : (
                                 <div className="flex-1 flex gap-2">
                                     <AddToCartButton
                                         product={{
@@ -82,11 +82,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         </Link>
                                     </Button>
                                 </div>
-                                <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full" asChild>
-                                    <Link href="/inquiry">{dict.product.ask_question}</Link>
-                                </Button>
-                            </div>
-                        )}
+                            )}
+                            <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full" asChild>
+                                <Link href="/inquiry">{dict.product.ask_question}</Link>
+                            </Button>
+                        </div>
                     </div>
 
                     <Tabs defaultValue="care" className="w-full">

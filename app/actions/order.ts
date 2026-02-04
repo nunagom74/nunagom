@@ -76,34 +76,63 @@ export async function submitOrder(prevState: any, formData: FormData) {
     }
 
     try {
-        const order = await prisma.order.create({
-            data: {
-                customerName,
-                customerEmail: customerEmail || null,
-                customerPhone,
-                address,
-                detailAddress,
-                message,
-                totalAmount,
-                status: 'PENDING',
-                items: {
-                    create: orderItems.map(item => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: item.price,
-                    }))
+        // Use a transaction to ensure stock is checked/updated and order is created atomically
+        const order = await prisma.$transaction(async (tx) => {
+            // 1. Validate and Decrement Stock for each item
+            for (const item of orderItems) {
+                const product = await tx.product.findUnique({
+                    where: { id: item.productId }
+                })
+
+                if (!product) {
+                    throw new Error(`Product not found (ID: ${item.productId})`)
+                }
+
+                // Check stock if it is not null (null means infinite/made-to-order)
+                if (product.stock !== null) {
+                    if (product.stock < item.quantity) {
+                        throw new Error(`죄송합니다. '${product.title}' 상품의 재고가 부족합니다. (요청: ${item.quantity}개 / 현재: ${product.stock}개)`)
+                    }
+
+                    // Decrement stock
+                    await tx.product.update({
+                        where: { id: item.productId },
+                        data: { stock: { decrement: item.quantity } }
+                    })
                 }
             }
+
+            // 2. Create Order
+            return await tx.order.create({
+                data: {
+                    customerName,
+                    customerEmail: customerEmail || null,
+                    customerPhone,
+                    address,
+                    detailAddress,
+                    message,
+                    totalAmount,
+                    status: 'PENDING',
+                    items: {
+                        create: orderItems.map(item => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: item.price,
+                        }))
+                    }
+                }
+            })
         })
 
-        // -- New: Auto-send Order Confirmation Email --
-        if (customerEmail) {
+        // -- Auto-send Order Confirmation Email (Post-Transaction) --
+        if (customerEmail && order) {
             const orderIdShort = order.id.slice(0, 8).toUpperCase()
             const subject = `[누나곰] 주문이 확인되었습니다 (주문번호: #${orderIdShort})`
             const emailBody = `안녕하세요 ${customerName}님,\n\n누나곰을 찾아주셔서 감사합니다. 고객님의 주문이 성공적으로 접수되었습니다.\n\n첨부된 주문서를 확인해주시기 바라며, 배송이 시작되면 다시 안내해 드리겠습니다.\n\n감사합니다.\n누나곰 드림`
 
-            // Send email asynchronously (don't block the user too long, but await to ensure it's fired)
+            // Send email asynchronously
             console.log(`Sending auto-confirmation email to ${customerEmail}...`)
+            // We use 'order.id' which is committed now.
             const emailResult = await sendOrderEmail(
                 order.id,
                 subject,
@@ -119,13 +148,11 @@ export async function submitOrder(prevState: any, formData: FormData) {
         }
         // ---------------------------------------------
 
-        // Return success with clearCart flag if needed, or redirect
     } catch (err) {
         console.error(err)
-        return { error: "Failed to create order." }
+        // Return friendly error message to the client
+        return { error: (err as Error).message || "Failed to create order." }
     }
 
     redirect('/order/success?clearCart=true')
 }
-
-
