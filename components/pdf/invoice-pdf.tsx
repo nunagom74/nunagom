@@ -2,16 +2,15 @@ import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/
 import { Order, OrderItem, Product } from '@prisma/client';
 
 // Register a font that supports Korean
-// Register a font that supports Korean
 Font.register({
-    family: 'NanumGothic',
-    src: `${process.cwd()}/public/fonts/NanumGothic-Regular.ttf`
+    family: 'NotoSansKR',
+    src: 'https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLQ.ttf'
 });
 
 const styles = StyleSheet.create({
     page: {
         padding: 40,
-        fontFamily: 'NanumGothic',
+        fontFamily: 'NotoSansKR',
         fontSize: 10,
         color: '#333',
         lineHeight: 1.5
