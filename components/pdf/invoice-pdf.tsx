@@ -1,69 +1,156 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Order, OrderItem, Product } from '@prisma/client';
 
 // Register a font that supports Korean
 // Register a font that supports Korean
 Font.register({
     family: 'NanumGothic',
-    src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothic/NanumGothic-Regular.ttf'
+    src: `${process.cwd()}/public/fonts/NanumGothic-Regular.ttf`
 });
 
 const styles = StyleSheet.create({
     page: {
-        flexDirection: 'column',
-        backgroundColor: '#FFFFFF',
-        padding: 30,
-        fontFamily: 'NanumGothic'
+        padding: 40,
+        fontFamily: 'NanumGothic',
+        fontSize: 10,
+        color: '#333',
+        lineHeight: 1.5
     },
     header: {
-        fontSize: 24,
-        marginBottom: 20,
-        textAlign: 'center',
-        fontWeight: 'bold'
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start', // Changed from center to flex-start to avoid overlap if titles are large
+        borderBottomWidth: 2,
+        borderBottomColor: '#111',
+        paddingBottom: 10,
+        marginBottom: 30
     },
-    section: {
-        margin: 10,
-        padding: 10,
-        flexGrow: 1
+    brand: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#111'
+    },
+    brandSub: {
+        fontSize: 10,
+        color: '#666',
+        marginTop: 2
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        color: '#111',
+        marginTop: 5
+    },
+    infoGrid: {
+        flexDirection: 'row',
+        marginBottom: 30,
+        gap: 30
+    },
+    col: {
+        flex: 1
+    },
+    sectionTitle: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#666',
+        textTransform: 'uppercase',
+        borderBottomWidth: 1,
+        borderBottomColor: '#EEE',
+        paddingBottom: 4,
+        marginBottom: 8
     },
     row: {
         flexDirection: 'row',
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEE',
-        paddingBottom: 5,
-        marginBottom: 5
+        justifyContent: 'space-between',
+        marginBottom: 4
     },
     label: {
-        width: 100,
-        fontSize: 10,
-        color: '#666'
+        color: '#666',
+        width: 60
     },
-    value: {
+    val: {
         flex: 1,
-        fontSize: 10
+        textAlign: 'right'
     },
-    tableHeader: {
+    valLeft: {
+        flex: 1,
+        textAlign: 'left'
+    },
+    table: {
+        marginTop: 10,
+        marginBottom: 20
+    },
+    th: {
         flexDirection: 'row',
-        borderBottomWidth: 2,
-        borderBottomColor: '#000',
-        paddingBottom: 5,
-        marginTop: 20,
-        marginBottom: 10
+        backgroundColor: '#F8F9FA',
+        borderBottomWidth: 1,
+        borderBottomColor: '#DDD',
+        paddingVertical: 8,
+        paddingHorizontal: 4
     },
-    tableRow: {
+    tr: {
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: '#EEE',
-        paddingVertical: 8
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+        alignItems: 'center',
+        minHeight: 40 // Ensure minimum height for rows with images
     },
-    colName: { width: '60%', fontSize: 10 },
-    colQty: { width: '10%', fontSize: 10, textAlign: 'center' },
-    colPrice: { width: '30%', fontSize: 10, textAlign: 'right' },
-    total: {
-        marginTop: 20,
-        textAlign: 'right',
-        fontSize: 14,
+    tdIdx: { width: '8%', textAlign: 'center' },
+    tdImage: { width: '15%', paddingRight: 10 },
+    tdItem: { width: '37%' },
+    tdQty: { width: '15%', textAlign: 'center' },
+    tdPrice: { width: '25%', textAlign: 'right' },
+    image: { width: 40, height: 40, objectFit: 'cover', borderRadius: 4, backgroundColor: '#EEE' },
+
+    totalSection: {
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        marginTop: 10
+    },
+    totalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: 250,
+        marginBottom: 5
+    },
+    totalLabel: {
+        color: '#666'
+    },
+    totalVal: {
         fontWeight: 'bold'
+    },
+    grandTotal: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: 250,
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 2,
+        borderTopColor: '#111'
+    },
+    grandTotalLabel: {
+        fontSize: 12,
+        fontWeight: 'bold'
+    },
+    grandTotalVal: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#111'
+    },
+    footer: {
+        position: 'absolute',
+        bottom: 30,
+        left: 40,
+        right: 40,
+        textAlign: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#EEE',
+        paddingTop: 20,
+        color: '#999',
+        fontSize: 9
     }
 });
 
@@ -71,68 +158,124 @@ type OrderWithItems = Order & {
     items: (OrderItem & { product: Product })[]
 }
 
-export const InvoicePDF = ({ order }: { order: OrderWithItems }) => {
-    // Calculate totals
+export const InvoicePDF = ({ order, dict }: { order: OrderWithItems, dict: any }) => {
     const subtotal = order.items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
     const shippingFee = order.totalAmount - subtotal
+
+    // Format date as YYYY. MM. DD.
+    const date = new Date(order.createdAt);
+    const dateStr = `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(date.getDate()).padStart(2, '0')}.`;
 
     return (
         <Document>
             <Page size="A4" style={styles.page}>
-                <Text style={styles.header}>거 래 명 세 서</Text>
+                {/* Header */}
+                <View style={styles.header}>
+                    <View style={{ flexDirection: 'column' }}>
+                        <Text style={styles.brand}>Nuna Gom</Text>
+                        <Text style={styles.brandSub}>Handmade Knitted Bears</Text>
+                    </View>
+                    <Text style={styles.title}>{dict?.admin?.order_list?.invoice_title || "INVOICE"}</Text>
+                </View>
 
-                <View style={styles.section}>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>주문번호:</Text>
-                        <Text style={styles.value}>{order.id}</Text>
+                {/* Info Section */}
+                <View style={styles.infoGrid}>
+                    <View style={styles.col}>
+                        <Text style={styles.sectionTitle}>{dict?.admin?.order_list?.bill_to || "Bill To"}</Text>
+                        <View style={styles.row}>
+                            <Text style={styles.valLeft}>{order.customerName}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.valLeft}>{order.customerPhone}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.valLeft}>{order.customerEmail || ''}</Text>
+                        </View>
+                        <View style={{ marginTop: 10 }}>
+                            <Text style={styles.valLeft}>{order.address}</Text>
+                            <Text style={styles.valLeft}>{order.detailAddress}</Text>
+                        </View>
                     </View>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>일자:</Text>
-                        <Text style={styles.value}>{new Date(order.createdAt).toLocaleDateString()}</Text>
-                    </View>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>주문자:</Text>
-                        <Text style={styles.value}>{order.customerName}</Text>
-                    </View>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>이메일:</Text>
-                        <Text style={styles.value}>{order.customerEmail || '-'}</Text>
-                    </View>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>연락처:</Text>
-                        <Text style={styles.value}>{order.customerPhone}</Text>
-                    </View>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>주소:</Text>
-                        <Text style={styles.value}>{order.address} {order.detailAddress}</Text>
+                    <View style={styles.col}>
+                        <Text style={styles.sectionTitle}>{dict?.admin?.order_list?.order_info || "Order Info"}</Text>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>{dict?.admin?.order_list?.th_id || "Order No."}</Text>
+                            <Text style={styles.val}>{order.id.slice(0, 8).toUpperCase()}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>{dict?.admin?.order_list?.th_date || "Date"}</Text>
+                            <Text style={styles.val}>{dateStr}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>{dict?.admin?.order_list?.th_status || "Status"}</Text>
+                            <Text style={styles.val}>{order.status}</Text>
+                        </View>
                     </View>
                 </View>
 
-                <View style={styles.section}>
-                    <View style={styles.tableHeader}>
-                        <Text style={styles.colName}>상품명</Text>
-                        <Text style={styles.colQty}>수량</Text>
-                        <Text style={styles.colPrice}>단가</Text>
+                {/* Message if exists */}
+                {order.message && (
+                    <View style={{ marginBottom: 20, backgroundColor: '#F9F9F9', padding: 10, borderRadius: 4 }}>
+                        <Text style={{ fontSize: 9, color: '#666', marginBottom: 4 }}>Message:</Text>
+                        <Text style={{ fontStyle: 'italic' }}>"{order.message}"</Text>
                     </View>
-                    {order.items.map((item, index) => (
-                        <View key={index} style={styles.tableRow}>
-                            <Text style={styles.colName}>{item.product.title}</Text>
-                            <Text style={styles.colQty}>{item.quantity}</Text>
-                            <Text style={styles.colPrice}>{item.price.toLocaleString()}원</Text>
+                )}
+
+                {/* Items Table */}
+                <View style={styles.table}>
+                    <View style={styles.th}>
+                        <Text style={styles.tdIdx}>#</Text>
+                        <Text style={styles.tdImage}>{dict?.admin?.product_list?.th_image || "Image"}</Text>
+                        <Text style={styles.tdItem}>{dict?.admin?.product_list?.th_name || "Description"}</Text>
+                        <Text style={styles.tdQty}>{dict?.order?.quantity || "Qty"}</Text>
+                        <Text style={styles.tdPrice}>{dict?.admin?.product_list?.th_price || "Price"}</Text>
+                    </View>
+                    {order.items.map((item, idx) => (
+                        <View key={item.id} style={styles.tr}>
+                            <Text style={styles.tdIdx}>{idx + 1}</Text>
+                            <View style={styles.tdImage}>
+                                {item.product.images[0] ? (
+                                    <Image src={item.product.images[0]} style={styles.image} />
+                                ) : (
+                                    <View style={styles.image} />
+                                )}
+                            </View>
+                            <View style={styles.tdItem}>
+                                <Text style={{ fontWeight: 'bold' }}>{item.product.title}</Text>
+                                {item.options && typeof item.options === 'object' && (
+                                    <Text style={{ fontSize: 8, color: '#666', marginTop: 2 }}>
+                                        {Object.entries(item.options).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                                    </Text>
+                                )}
+                            </View>
+                            <Text style={styles.tdQty}>{item.quantity}</Text>
+                            <Text style={styles.tdPrice}>
+                                {(item.price * item.quantity).toLocaleString()} {dict?.product?.price_unit || "KRW"}
+                            </Text>
                         </View>
                     ))}
+                </View>
 
-                    <View style={{ marginTop: 20 }}>
-                        <Text style={{ ...styles.total, fontSize: 10, fontWeight: 'normal' }}>
-                            주문금액: {subtotal.toLocaleString()}원
-                        </Text>
-                        <Text style={{ ...styles.total, fontSize: 10, fontWeight: 'normal', marginTop: 5 }}>
-                            배송비: {shippingFee.toLocaleString()}원
-                        </Text>
-                        <Text style={styles.total}>
-                            합계: {order.totalAmount.toLocaleString()}원
-                        </Text>
+                {/* Totals */}
+                <View style={styles.totalSection}>
+                    <View style={styles.totalRow}>
+                        <Text style={styles.totalLabel}>{dict?.order?.subtotal || "Subtotal"}</Text>
+                        <Text style={styles.totalVal}>{subtotal.toLocaleString()} {dict?.product?.price_unit}</Text>
                     </View>
+                    <View style={styles.totalRow}>
+                        <Text style={styles.totalLabel}>{dict?.order?.shipping_fee || "Shipping"}</Text>
+                        <Text style={styles.totalVal}>{shippingFee.toLocaleString()} {dict?.product?.price_unit}</Text>
+                    </View>
+                    <View style={styles.grandTotal}>
+                        <Text style={styles.grandTotalLabel}>{dict?.order?.total || "Total"}</Text>
+                        <Text style={styles.grandTotalVal}>{order.totalAmount.toLocaleString()} {dict?.product?.price_unit || "KRW"}</Text>
+                    </View>
+                </View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                    <Text>{dict?.admin?.order_list?.thank_you || "Thank you for your business!"}</Text>
+                    <Text style={{ marginTop: 4 }}>Nuna Gom | Handmade Knitted Bears</Text>
                 </View>
             </Page>
         </Document>

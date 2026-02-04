@@ -28,162 +28,33 @@ export function OrderDetailSheet({ order, dict, children }: OrderDetailSheetProp
     const [emailDialogOpen, setEmailDialogOpen] = useState(false)
     const printableRef = useRef<HTMLDivElement>(null)
 
-    const handlePrint = () => {
-        const content = printableRef.current
-        if (!content) return
+    const handlePrint = async () => {
+        try {
+            // Call Server Action
+            const { generateInvoicePDF } = await import('@/app/actions/pdf');
 
-        // Calculate totals
-        const subtotal = order.items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
-        const shippingFee = order.totalAmount - subtotal
+            const result = await generateInvoicePDF(order.id);
 
-        const printWindow = window.open('', '', 'width=800,height=800')
-        if (!printWindow) return
-
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>Invoice #${order.id}</title>
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-                        body { 
-                            font-family: 'Noto Sans KR', sans-serif; 
-                            padding: 40px; 
-                            color: #333;
-                            max-width: 800px;
-                            margin: 0 auto;
-                        }
-                        .header { 
-                            display: flex; 
-                            justify-content: space-between; 
-                            align-items: flex-start;
-                            border-bottom: 2px solid #333; 
-                            padding-bottom: 20px;
-                            margin-bottom: 30px;
-                        }
-                        .brand { font-size: 24px; font-weight: bold; }
-                        .brand small { font-size: 14px; font-weight: normal; display: block; margin-top: 5px; color: #666; }
-                        .invoice-title { font-size: 32px; font-weight: bold; color: #333; text-align: right; }
-                        
-                        .grid-row { display: flex; gap: 40px; margin-bottom: 40px; }
-                        .col { flex: 1; }
-                        
-                        h3 { font-size: 14px; text-transform: uppercase; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
-                        p { margin: 5px 0; font-size: 14px; line-height: 1.5; }
-                        .label { font-weight: bold; width: 80px; display: inline-block; }
-                        
-                        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                        th { background: #f8f9fa; text-align: left; padding: 12px; font-size: 13px; text-transform: uppercase; border-bottom: 2px solid #ddd; }
-                        td { padding: 15px 12px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 14px; }
-                        .text-right { text-align: right; }
-                        .thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: #eee; }
-                        
-                        .totals { width: 300px; margin-left: auto; }
-                        .total-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
-                        .grand-total { border-top: 2px solid #333; padding-top: 15px; margin-top: 10px; font-weight: bold; font-size: 18px; }
-                        
-                        .footer { margin-top: 60px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="brand">
-                            Nuna Gom (누나곰)
-                            <small>Handmade Knitted Bears</small>
-                        </div>
-                        <div>
-                            <div class="invoice-title">거 래 명 세 서</div>
-                            <p style="text-align: right; margin-top: 10px;">
-                                <strong>주문번호:</strong> ${order.id}<br>
-                                <strong>일자:</strong> ${new Date(order.createdAt).toLocaleDateString()}
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="grid-row">
-                        <div class="col">
-                            <h3>${dict.admin.order_list.cust_info}</h3>
-                            <p><strong>${order.customerName}</strong></p>
-                            <p>${order.customerPhone}</p>
-                            <p>${order.customerEmail || ''}</p>
-                        </div>
-                        <div class="col">
-                            <h3>${dict.admin.order_list.ship_addr}</h3>
-                            <p>${order.address}</p>
-                            <p>${order.detailAddress || ''}</p>
-                        </div>
-                    </div>
-
-                    ${order.message ? `
-                    <div style="margin-bottom: 30px; background: #f9f9f9; padding: 15px; border-radius: 4px;">
-                        <h3 style="margin-top: 0;">${dict.admin.order_list.message}</h3>
-                        <p style="font-style: italic;">"${order.message}"</p>
-                    </div>
-                    ` : ''}
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 70px;">이미지</th>
-                                <th>상품명</th>
-                                <th class="text-right">단가</th>
-                                <th class="text-right">수량</th>
-                                <th class="text-right">금액</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${order.items.map(item => `
-                                <tr>
-                                    <td>
-                                        ${item.product.images[0] ?
-                `<img src="${item.product.images[0]}" class="thumb" />` :
-                '<div class="thumb"></div>'
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to generate PDF');
             }
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: bold;">${item.product.title}</div>
-                                        ${item.options && typeof item.options === 'object' ?
-                `<div style="font-size: 12px; color: #666; margin-top: 4px;">
-                                                ${Object.entries(item.options).map(([k, v]) => `${k}: ${v}`).join(', ')}
-                                            </div>` : ''
+
+            // Convert Base64 to Blob
+            const byteCharacters = atob(result.data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
-                                    </td>
-                                    <td class="text-right">${item.price.toLocaleString()}</td>
-                                    <td class="text-right">${item.quantity}</td>
-                                    <td class="text-right">${(item.price * item.quantity).toLocaleString()}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
 
-                    <div class="totals">
-                        <div class="total-row">
-                            <span>주문금액</span>
-                            <span>${subtotal.toLocaleString()} ${dict.product.price_unit}</span>
-                        </div>
-                        <div class="total-row">
-                            <span>배송비</span>
-                            <span>${shippingFee.toLocaleString()} ${dict.product.price_unit}</span>
-                        </div>
-                        <div class="total-row grand-total">
-                            <span>합계</span>
-                            <span>${order.totalAmount.toLocaleString()} ${dict.product.price_unit}</span>
-                        </div>
-                    </div>
-
-                    <div class="footer">
-                        이용해 주셔서 감사합니다!<br>
-                        Nuna Gom - Handcrafted with Love
-                    </div>
-                </body>
-            </html>
-        `)
-        printWindow.document.close()
-        printWindow.focus()
-        setTimeout(() => {
-            printWindow.print()
-            printWindow.close()
-        }, 250)
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        } catch (error) {
+            console.error('Failed to generate PDF:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            alert(`PDF 생성 실패: ${errorMessage}\n\n관리자에게 문의하세요.`);
+        }
     }
 
     return (
@@ -275,7 +146,15 @@ export function OrderDetailSheet({ order, dict, children }: OrderDetailSheetProp
                     </div>
 
                     <div className="border-t pt-4">
-                        <div className="flex justify-between font-bold text-lg">
+                        <div className="flex justify-between text-sm mb-2">
+                            <span className="text-muted-foreground">{dict.order?.subtotal || "주문 금액"}</span>
+                            <span>{order.items.reduce((acc, item) => acc + (item.price * item.quantity), 0).toLocaleString()} {dict.product.price_unit}</span>
+                        </div>
+                        <div className="flex justify-between text-sm mb-4">
+                            <span className="text-muted-foreground">{dict.order?.shipping_fee || "배송비"}</span>
+                            <span>{(order.totalAmount - order.items.reduce((acc, item) => acc + (item.price * item.quantity), 0)).toLocaleString()} {dict.product.price_unit}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-lg border-t pt-2">
                             <span>{dict.admin.order_list.total}</span>
                             <span>{order.totalAmount.toLocaleString()} {dict.product.price_unit}</span>
                         </div>

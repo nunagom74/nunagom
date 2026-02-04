@@ -22,7 +22,10 @@ export async function getLocale(): Promise<Locale> {
     return locale
 }
 
-export async function getDictionary(): Promise<Dictionary> {
-    const locale = await getLocale()
-    return dictionaries[locale]()
+export async function getDictionary(locale?: Locale): Promise<Dictionary> {
+    if (locale) {
+        return dictionaries[locale]()
+    }
+    const currentLocale = await getLocale()
+    return dictionaries[currentLocale]()
 }

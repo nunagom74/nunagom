@@ -190,7 +190,10 @@
                 "shipped": "발송됨",
                 "delivered": "배송완료",
                 "cancelled": "취소됨"
-            }
+            },
+            "invoice_title": "거래명세서",
+            "bill_to": "주문자 정보",
+            "order_info": "주문 정보"
         },
         "inquiry_list": {
             "title": "문의 목록",

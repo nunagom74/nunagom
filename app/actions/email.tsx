@@ -34,6 +34,7 @@ export async function sendEmail({
     // 1. Try sending via Gmail SMTP if configured
     if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
         try {
+            console.log('Attempting to send email via Gmail...')
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
                 auth: {
@@ -53,12 +54,14 @@ export async function sendEmail({
                     content: att.content
                 }))
             })
+            console.log('Email sent successfully via Gmail')
             return { success: true }
         } catch (error) {
             console.error('Gmail send error:', error)
-            // Fallback to Resend or just fail? For clarity, let's return error here 
-            // so we don't accidentally send via Resend if user intended Gmail.
-            return { success: false, error: 'Gmail sending failed: ' + (error as Error).message }
+            return {
+                success: false,
+                error: 'Gmail sending failed. Please check your GMAIL_APP_PASSWORD and ensure "App Passwords" are used, not your regular password. Error: ' + (error as Error).message
+            }
         }
     }
 
@@ -90,11 +93,14 @@ export async function sendEmail({
     }
 }
 
+import { getDictionary } from '@/lib/i18n'
+
 export async function sendOrderEmail(
     orderId: string,
     subject: string,
     message: string,
-    attachInvoice: boolean
+    attachInvoice: boolean,
+    locale: string = 'ko'
 ) {
     try {
         const order = await prisma.order.findUnique({
@@ -110,8 +116,11 @@ export async function sendOrderEmail(
 
         if (attachInvoice) {
             try {
+                // Load Dictionary
+                const dict = await getDictionary(locale as any)
+
                 // Generate PDF Buffer
-                const pdfBuffer = await renderToBuffer(<InvoicePDF order={order} />)
+                const pdfBuffer = await renderToBuffer(<InvoicePDF order={order} dict={dict} />)
                 attachments.push({
                     filename: `Invoice-${order.id}.pdf`,
                     content: pdfBuffer
