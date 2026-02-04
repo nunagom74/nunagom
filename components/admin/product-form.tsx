@@ -88,7 +88,7 @@ function SortableImage({
             <img src={url} alt="Product" className="object-cover w-full h-full pointer-events-none" />
 
             {/* Overlay Actions */}
-            <div className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center justify-center gap-2">
+            <div className="absolute inset-0 bg-black/50 text-white z-10 flex items-center justify-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button
                     type="button"
                     onPointerDown={(e) => e.stopPropagation()}
