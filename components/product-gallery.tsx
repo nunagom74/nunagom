@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 
 interface ProductGalleryProps {
     images: string[]
@@ -70,10 +70,13 @@ export function ProductGallery({ images, title, soldOut, madeToOrder, dict }: Pr
                 onTouchEnd={onTouchEnd}
             >
                 {currentImage ? (
-                    <img
+                    <Image
                         src={currentImage}
                         alt={`${title} - Image ${selectedIndex + 1}`}
-                        className="object-cover w-full h-full transition-transform duration-500"
+                        fill
+                        className="object-cover transition-transform duration-500"
+                        priority={true}
+                        sizes="(max-width: 768px) 100vw, 50vw"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-secondary text-secondary-foreground/20">
@@ -123,7 +126,15 @@ export function ProductGallery({ images, title, soldOut, madeToOrder, dict }: Pr
                                 selectedIndex === idx ? "border-primary ring-2 ring-primary/20" : "border-transparent hover:border-primary/50"
                             )}
                         >
-                            <img src={img} alt="" className="object-cover w-full h-full" />
+                            <div className="relative w-full h-full">
+                                <Image
+                                    src={img}
+                                    alt=""
+                                    fill
+                                    className="object-cover"
+                                    sizes="100px"
+                                />
+                            </div>
                         </button>
                     ))}
                 </div>

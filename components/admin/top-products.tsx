@@ -1,8 +1,4 @@
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from "@/components/ui/avatar"
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface TopProduct {
@@ -38,10 +34,23 @@ export function TopProducts({ products, dict }: TopProductsProps) {
                                     {index + 1}
                                 </span>
                             </div>
-                            <Avatar className="h-10 w-10 rounded-md border">
-                                <AvatarImage src={product.image || undefined} alt={product.title} className="object-cover" />
-                                <AvatarFallback>{product.title.slice(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
+
+                            <div className="relative h-10 w-10 rounded-md border overflow-hidden bg-muted">
+                                {product.image ? (
+                                    <Image
+                                        src={product.image}
+                                        alt={product.title}
+                                        fill
+                                        className="object-cover"
+                                        sizes="40px"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-secondary text-[10px] text-muted-foreground">
+                                        No Img
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="ml-4 space-y-1 flex-1">
                                 <p className="text-sm font-medium leading-none line-clamp-1">{product.title}</p>
                                 <div className="flex items-center text-xs text-muted-foreground">

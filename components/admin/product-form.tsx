@@ -1,5 +1,6 @@
 'use client'
 import { upload } from '@vercel/blob/client'
+import Image from 'next/image'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -85,7 +86,13 @@ function SortableImage({
             {...listeners}
             className="relative w-24 h-24 border rounded overflow-hidden group select-none touch-none bg-background"
         >
-            <img src={url} alt="Product" className="object-cover w-full h-full pointer-events-none" />
+            <Image
+                src={url}
+                alt="Product"
+                fill
+                className="object-cover pointer-events-none"
+                sizes="96px"
+            />
 
             {/* Overlay Actions */}
             <div className="absolute inset-0 bg-black/50 text-white z-10 flex items-center justify-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
