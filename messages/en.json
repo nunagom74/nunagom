@@ -155,6 +155,9 @@
       "made_to_order": "Made to Order?",
       "stock": "Stock",
       "lead_time": "Lead Time (Days)",
+      "care_text": "Care Instructions",
+      "delivery_text": "Delivery Info",
+      "reset_default": "Reset to Default",
       "update_btn": "Update Product",
       "create_btn": "Create Product"
     },

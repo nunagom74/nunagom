@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, RotateCcw } from 'lucide-react'
 import { createProduct, updateProduct } from '@/app/actions/product'
 import { useState } from 'react'
 
@@ -43,6 +43,8 @@ interface ProductFormProps {
         madeToOrder: boolean
         stock: number | null
         leadTimeDays: number | null
+        careText: string | null
+        deliveryText: string | null
     }
     dict: any
 }
@@ -131,6 +133,13 @@ export function ProductForm({ product, dict }: ProductFormProps) {
     const [title, setTitle] = useState(product?.title || '')
     const [slug, setSlug] = useState(product?.slug || '')
     const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(!!product?.slug)
+
+    // Default care/delivery text from i18n
+    const defaultCareText = (Array.isArray(dict.product.care_text) ? dict.product.care_text : [dict.product.care_text]).join('\n')
+    const defaultDeliveryText = (Array.isArray(dict.product.delivery_text) ? dict.product.delivery_text : [dict.product.delivery_text]).join('\n')
+
+    const [careText, setCareText] = useState(product?.careText ?? (isEdit ? '' : defaultCareText))
+    const [deliveryText, setDeliveryText] = useState(product?.deliveryText ?? (isEdit ? '' : defaultDeliveryText))
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -329,6 +338,52 @@ export function ProductForm({ product, dict }: ProductFormProps) {
                                 <Label htmlFor="leadTimeDays">{dict.admin.product_form.lead_time}</Label>
                                 <Input id="leadTimeDays" name="leadTimeDays" type="number" defaultValue={product?.leadTimeDays || 7} />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="careText">{dict.admin.product_form.care_text}</Label>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1"
+                                    onClick={() => setCareText(defaultCareText)}
+                                >
+                                    <RotateCcw className="h-3 w-3" />
+                                    {dict.admin.product_form.reset_default}
+                                </Button>
+                            </div>
+                            <Textarea
+                                id="careText"
+                                name="careText"
+                                rows={4}
+                                value={careText}
+                                onChange={(e) => setCareText(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="deliveryText">{dict.admin.product_form.delivery_text}</Label>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1"
+                                    onClick={() => setDeliveryText(defaultDeliveryText)}
+                                >
+                                    <RotateCcw className="h-3 w-3" />
+                                    {dict.admin.product_form.reset_default}
+                                </Button>
+                            </div>
+                            <Textarea
+                                id="deliveryText"
+                                name="deliveryText"
+                                rows={4}
+                                value={deliveryText}
+                                onChange={(e) => setDeliveryText(e.target.value)}
+                            />
                         </div>
 
                         <div className="flex justify-end pt-4">

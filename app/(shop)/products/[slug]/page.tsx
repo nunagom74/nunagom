@@ -95,18 +95,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             <TabsTrigger value="delivery" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2">{dict.product.delivery}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="care" className="pt-4 text-sm text-muted-foreground leading-relaxed">
-                            <ul className="space-y-1">
-                                {(Array.isArray(dict.product.care_text) ? dict.product.care_text : [dict.product.care_text]).map((line: string, i: number) => (
-                                    <li key={i}>{line}</li>
-                                ))}
-                            </ul>
+                            {product.careText ? (
+                                <ul className="space-y-1">
+                                    {product.careText.split('\n').map((line: string, i: number) => (
+                                        <li key={i}>{line}</li>
+                                    ))}
+                                </ul>
+                            ) : null}
                         </TabsContent>
                         <TabsContent value="delivery" className="pt-4 text-sm text-muted-foreground leading-relaxed">
-                            <ul className="space-y-1">
-                                {(Array.isArray(dict.product.delivery_text) ? dict.product.delivery_text : [dict.product.delivery_text]).map((line: string, i: number) => (
-                                    <li key={i}>{line.replace('{days}', (product.leadTimeDays || 7).toString())}</li>
-                                ))}
-                            </ul>
+                            {product.deliveryText ? (
+                                <ul className="space-y-1">
+                                    {product.deliveryText.split('\n').map((line: string, i: number) => (
+                                        <li key={i}>{line.replace('{days}', (product.leadTimeDays || 7).toString())}</li>
+                                    ))}
+                                </ul>
+                            ) : null}
                         </TabsContent>
                     </Tabs>
                 </div>

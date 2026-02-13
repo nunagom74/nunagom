@@ -39,6 +39,9 @@ export async function createProduct(formData: FormData) {
         ? imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0)
         : []
 
+    const careText = (formData.get('careText') as string)?.trim() || null
+    const deliveryText = (formData.get('deliveryText') as string)?.trim() || null
+
     await prisma.product.create({
         data: {
             title,
@@ -49,6 +52,8 @@ export async function createProduct(formData: FormData) {
             stock,
             leadTimeDays,
             images,
+            careText,
+            deliveryText,
             colors: [],
             sizes: [],
         }
@@ -80,6 +85,9 @@ export async function updateProduct(id: string, formData: FormData) {
         ? imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0)
         : []
 
+    const careText = (formData.get('careText') as string)?.trim() || null
+    const deliveryText = (formData.get('deliveryText') as string)?.trim() || null
+
     await prisma.product.update({
         where: { id },
         data: {
@@ -91,6 +99,8 @@ export async function updateProduct(id: string, formData: FormData) {
             stock,
             leadTimeDays,
             images,
+            careText,
+            deliveryText,
         }
     })
 
