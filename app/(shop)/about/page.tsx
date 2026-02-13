@@ -23,7 +23,7 @@ export default async function AboutPage() {
                 />
             </div>
 
-            <div className="space-y-6 text-lg leading-relaxed text-muted-foreground text-left md:text-center">
+            <div className="space-y-6 text-lg leading-relaxed text-muted-foreground text-left md:text-center break-keep">
                 <p>{dict.about.p1}</p>
                 <p>{dict.about.p2}</p>
                 <p>{dict.about.p3}</p>
