@@ -202,6 +202,27 @@
             "bill_to": "주문자 정보",
             "order_info": "주문 정보"
         },
+        "policies_nav": "정책 관리",
+        "policies": {
+            "title": "정책 관리",
+            "edit": "수정",
+            "last_updated": "최종 수정",
+            "page_title": "정책 수정",
+            "policy_title": "제목",
+            "intro": "소개글 (선택사항)",
+            "intro_placeholder": "정책 페이지 상단에 표시될 소개문을 입력하세요",
+            "section_title": "섹션 제목",
+            "section_content": "섹션 내용",
+            "section_content_placeholder": "각 줄은 별도의 문단으로 표시됩니다",
+            "add_section": "섹션 추가",
+            "save": "저장",
+            "saving": "저장 중...",
+            "saved": "저장되었습니다",
+            "save_error": "저장에 실패했습니다",
+            "section_label": "섹션",
+            "privacy": "개인정보처리방침",
+            "shipping": "배송 및 교환/환불 정책"
+        },
         "inquiry_list": {
             "title": "문의 목록",
             "th_date": "날짜",

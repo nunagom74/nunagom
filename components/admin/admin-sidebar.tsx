@@ -8,6 +8,7 @@ import {
     Package,
     ShoppingCart,
     MessageSquare,
+    FileText,
     LogOut,
     Menu
 } from 'lucide-react'
@@ -35,6 +36,7 @@ function AdminSidebarContent({ dict, locale, className }: AdminSidebarProps & { 
         { href: '/admin/products', label: dict.admin.products, icon: Package },
         { href: '/admin/orders', label: dict.admin.orders, icon: ShoppingCart },
         { href: '/admin/inquiries', label: dict.admin.inquiries, icon: MessageSquare },
+        { href: '/admin/policies', label: dict.admin.policies_nav, icon: FileText },
     ]
 
     return (
@@ -47,7 +49,9 @@ function AdminSidebarContent({ dict, locale, className }: AdminSidebarProps & { 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {sidebarItems.map((item) => {
                     const Icon = item.icon
-                    const isActive = pathname === item.href
+                    const isActive = item.href === '/admin'
+                        ? pathname === '/admin'
+                        : pathname.startsWith(item.href)
                     return (
                         <Link
                             key={item.href}

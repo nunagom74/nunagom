@@ -192,6 +192,27 @@
         "cancelled": "Cancelled"
       }
     },
+    "policies_nav": "Policies",
+    "policies": {
+      "title": "Policy Management",
+      "edit": "Edit",
+      "last_updated": "Last updated",
+      "page_title": "Edit Policy",
+      "policy_title": "Title",
+      "intro": "Introduction (optional)",
+      "intro_placeholder": "Enter an introductory paragraph shown at the top of the policy page",
+      "section_title": "Section Title",
+      "section_content": "Section Content",
+      "section_content_placeholder": "Each line will be displayed as a separate paragraph",
+      "add_section": "Add Section",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved successfully",
+      "save_error": "Failed to save",
+      "section_label": "Section",
+      "privacy": "Privacy Policy",
+      "shipping": "Shipping & Returns"
+    },
     "inquiry_list": {
       "title": "Inquiries",
       "th_date": "Date",
