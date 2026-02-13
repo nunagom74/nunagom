@@ -95,8 +95,12 @@ export async function sendEmail({
 }
 
 import { getDictionary } from '@/lib/i18n'
+import { getSession } from '@/lib/auth'
 
-export async function sendOrderEmail(
+/**
+ * Internal: sends order email without auth check (for server-to-server calls like auto-confirmation)
+ */
+export async function sendOrderEmailInternal(
     orderId: string,
     subject: string,
     message: string,
@@ -131,7 +135,6 @@ export async function sendOrderEmail(
                 })
             } catch (pdfError) {
                 console.error("Failed to generate PDF:", pdfError)
-                // Return failure if invoice was requested but failed
                 return {
                     success: false,
                     error: `Failed to generate PDF Invoice: ${(pdfError as Error).message}`
@@ -149,4 +152,22 @@ export async function sendOrderEmail(
         console.error('Failed to send order email:', error)
         return { success: false, error: `Failed to send order email: ${(error as Error).message}` }
     }
+}
+
+/**
+ * Admin-facing: sends order email with auth check (for client-side calls from admin UI)
+ */
+export async function sendOrderEmail(
+    orderId: string,
+    subject: string,
+    message: string,
+    attachInvoice: boolean,
+    locale: string = 'ko'
+) {
+    const session = await getSession()
+    if (!session?.user) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    return sendOrderEmailInternal(orderId, subject, message, attachInvoice, locale)
 }

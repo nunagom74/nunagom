@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import { getSession } from '@/lib/auth'
 
 const ProductSchema = z.object({
     title: z.string().min(1),
@@ -18,6 +19,11 @@ const ProductSchema = z.object({
 })
 
 export async function createProduct(formData: FormData) {
+    const session = await getSession()
+    if (!session?.user) {
+        throw new Error('Unauthorized')
+    }
+
     const title = formData.get('title') as string
     const slug = formData.get('slug') as string
     const priceStr = formData.get('price') as string
@@ -55,6 +61,11 @@ export async function createProduct(formData: FormData) {
 // ... (deleteProduct matches)
 
 export async function updateProduct(id: string, formData: FormData) {
+    const session = await getSession()
+    if (!session?.user) {
+        throw new Error('Unauthorized')
+    }
+
     const title = formData.get('title') as string
     const slug = formData.get('slug') as string
     const priceStr = formData.get('price') as string
@@ -88,11 +99,21 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
+    const session = await getSession()
+    if (!session?.user) {
+        throw new Error('Unauthorized')
+    }
+
     await prisma.product.delete({ where: { id } })
     revalidatePath('/admin/products')
 }
 
 export async function reorderProducts(items: { id: string; order: number }[]) {
+    const session = await getSession()
+    if (!session?.user) {
+        throw new Error('Unauthorized')
+    }
+
     await prisma.$transaction(
         items.map((item) =>
             prisma.product.update({

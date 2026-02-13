@@ -7,9 +7,14 @@ import React from 'react'
 
 import { getDictionary } from '@/lib/i18n'
 import { optimizeOrderImages } from '@/lib/pdf-image-helper'
-
+import { getSession } from '@/lib/auth'
 
 export async function generateInvoicePDF(orderId: string, locale: string = 'ko') {
+    const session = await getSession()
+    if (!session?.user) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         // Load Dictionary
         const dict = await getDictionary(locale as any)

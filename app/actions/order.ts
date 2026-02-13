@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
-import { sendOrderEmail } from './email'
+import { sendOrderEmailInternal } from './email'
 
 // Order Schema
 const OrderSchema = z.object({
@@ -133,7 +133,7 @@ export async function submitOrder(prevState: any, formData: FormData) {
             // Send email asynchronously
             console.log(`Sending auto-confirmation email to ${customerEmail}...`)
             // We use 'order.id' which is committed now.
-            const emailResult = await sendOrderEmail(
+            const emailResult = await sendOrderEmailInternal(
                 order.id,
                 subject,
                 emailBody,

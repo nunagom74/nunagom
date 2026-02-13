@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { containsProfanity } from '@/lib/profanity'
 import { headers } from 'next/headers'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getSession } from '@/lib/auth'
 
 interface ReplyOptions {
     sendEmail?: boolean
@@ -144,6 +145,11 @@ export async function submitInquiry(prevState: any, formData: FormData) {
 }
 
 export async function replyToInquiry(id: string, answer: string, options?: ReplyOptions) {
+    const session = await getSession()
+    if (!session?.user) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         // 1. Update DB first
         const inquiry = await prisma.inquiry.update({
@@ -189,6 +195,11 @@ export async function replyToInquiry(id: string, answer: string, options?: Reply
 }
 
 export async function deleteInquiry(id: string) {
+    const session = await getSession()
+    if (!session?.user) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
     try {
         await prisma.inquiry.delete({
             where: { id }
