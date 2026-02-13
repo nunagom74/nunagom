@@ -53,7 +53,7 @@ interface ProductListProps {
     dict: any
 }
 
-function SortableRow({ product, dict }: { product: Product, dict: any }) {
+function SortableRow({ product, dict, onDelete }: { product: Product, dict: any, onDelete: (id: string) => void }) {
     const {
         attributes,
         listeners,
@@ -112,12 +112,11 @@ function SortableRow({ product, dict }: { product: Product, dict: any }) {
                                 <Pencil className="mr-2 h-4 w-4" /> {dict.admin.product_list.edit}
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                            <form action={deleteProduct.bind(null, product.id)} className="w-full flex items-center">
-                                <button type="submit" className="flex items-center w-full">
-                                    <Trash className="mr-2 h-4 w-4" /> {dict.admin.product_list.delete}
-                                </button>
-                            </form>
+                        <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => onDelete(product.id)}
+                        >
+                            <Trash className="mr-2 h-4 w-4" /> {dict.admin.product_list.delete}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -129,6 +128,16 @@ function SortableRow({ product, dict }: { product: Product, dict: any }) {
 export function ProductList({ products: initialProducts, dict }: ProductListProps) {
     const [products, setProducts] = useState(initialProducts)
     const [isSaving, setIsSaving] = useState(false)
+
+    const handleDelete = async (id: string) => {
+        if (!confirm(dict.admin.product_list.confirm_delete)) return
+        try {
+            await deleteProduct(id)
+            setProducts(prev => prev.filter(p => p.id !== id))
+        } catch (error) {
+            console.error("Failed to delete product", error)
+        }
+    }
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -202,7 +211,7 @@ export function ProductList({ products: initialProducts, dict }: ProductListProp
                                 strategy={verticalListSortingStrategy}
                             >
                                 {products.map((product) => (
-                                    <SortableRow key={product.id} product={product} dict={dict} />
+                                    <SortableRow key={product.id} product={product} dict={dict} onDelete={handleDelete} />
                                 ))}
                             </SortableContext>
                             {products.length === 0 && (
