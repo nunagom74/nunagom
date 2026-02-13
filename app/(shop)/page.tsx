@@ -21,10 +21,10 @@ export default async function HomePage() {
       <section className="container mx-auto px-4 py-8 md:py-12 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 space-y-6 text-center lg:text-left">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-primary font-serif leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-primary font-serif leading-tight break-keep">
               {dict.home.hero_title}
             </h1>
-            <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0">
+            <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 break-keep">
               {dict.home.hero_desc}
             </p>
             <div className="flex gap-4 justify-center lg:justify-start pt-4">
@@ -51,7 +51,7 @@ export default async function HomePage() {
       <section className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold font-serif text-primary">{dict.home.new_arrivals}</h2>
-          <p className="text-muted-foreground mt-2">{dict.home.new_arrivals_desc}</p>
+          <p className="text-muted-foreground mt-2 break-keep">{dict.home.new_arrivals_desc}</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -99,8 +99,8 @@ export default async function HomePage() {
       {/* Banner */}
       <section className="bg-primary/5 py-16 text-center">
         <div className="container mx-auto px-4">
-          <h3 className="text-xl font-bold mb-4">{dict.home.made_to_order_title}</h3>
-          <p className="max-w-xl mx-auto text-muted-foreground mb-6">
+          <h3 className="text-xl font-bold mb-4 break-keep">{dict.home.made_to_order_title}</h3>
+          <p className="max-w-xl mx-auto text-muted-foreground mb-6 break-keep">
             {dict.home.made_to_order_desc}
           </p>
           <Link href="/policy/shipping" className="text-primary underline underline-offset-4 text-sm font-medium">
