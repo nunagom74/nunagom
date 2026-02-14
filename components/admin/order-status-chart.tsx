@@ -29,8 +29,8 @@ export function OrderStatusChart({ statusData, dict }: OrderStatusChartProps) {
                             data={statusData}
                             cx="50%"
                             cy="50%"
-                            innerRadius={60}
-                            outerRadius={100}
+                            innerRadius={50}
+                            outerRadius={80}
                             paddingAngle={5}
                             dataKey="value"
                             label={({ name, percent }: { name?: string, percent?: number }) => `${name || ''} ${((percent || 0) * 100).toFixed(0)}%`}
